@@ -1,49 +1,28 @@
-This is the **SQL** asset for TMC's **Dot** collection. It lets any Dot asset keep its data in SQLite, PostgreSQL or MySQL, so records, statistics, achievements and bans can live in a real database that several servers share.
+# dot-sql
 
-This collection of assets provides modular building blocks for creating games and applications within the TMC ecosystem, ensuring consistency and interoperability across all `dot-*` assets. This includes core functionality, networking, authentication, cloud integration, and more.
+Lets dot addons keep their data in SQLite, PostgreSQL or MySQL/MariaDB, so records, statistics, achievements and bans can live in a real database that several servers share. Godot has no database client of its own; this is the layer that supplies one.
 
-**These assets are COMPLETELY OPEN SOURCE**. You are free to use, modify, and distribute them under the terms of the MIT license. The only thing not open source is the back-end web infrastructure. So if you opt into using your own authentication backend instead of integrating with TMC, you will need to build and integrate your own back-end infrastructure.
+## Install
 
-## From Maintainer & WARNING
-This asset, along with all the others, was built initially with **Claude Code** and will continue to be maintained and extended using it. This is because I (`gamemann`) cannot build the entire TMC platform alone (I wish I could lol).
+1. Get [Godot 4.7](https://godotengine.org/download).
+2. Either use [dot-bootstrap](https://github.com/modcommunity/dot-bootstrap), which clones every project and links the addons, or copy `addons/dot_sql/` and [dot-core](https://github.com/modcommunity/dot-core)'s `addons/dot_core/` into your project and enable dot-sql in *Project > Project Settings > Plugins*.
+3. For SQLite, run `tools/fetch_sqlite.sh <your project>`. It installs a pinned, checksummed release of [godot-sqlite](https://github.com/2shady4u/godot-sqlite) (MIT) into `addons/godot-sqlite`. This addon does not ship it.
 
-**Please treat this as partially tested.** Every asset has its own headless test suite and those suites pass, but very little of this has been in front of real players yet. Expect rough edges, and please report anything you run into.
+dot-core is the only dependency.
 
-I intend on reviewing code, testing, and editing documentation regularly. If you're interested in helping out, please let me know!
-
-## What it does
-
-Godot has no database client. There is no SQLite, PostgreSQL or MySQL class in the engine. This asset is the layer every other Dot asset uses to get one:
+## What is in it
 
 | Piece | What it is |
 | --- | --- |
-| `DotSqlDriverSqlite` | SQLite through the [godot-sqlite](https://github.com/2shady4u/godot-sqlite) GDExtension. One server, one file. |
-| `DotSqlDriverGateway` | PostgreSQL, MySQL/MariaDB or SQLite through a small HTTP gateway that runs beside the database. Several servers, one database. |
-| `tools/sql_gateway.py` | A reference gateway, about two hundred lines of Python. |
-| `DotSqlDialect` | Every place the three databases differ: column types, upserts, placeholders, reserved words. |
-| `DotSqlSchema` | Tables described as plain data and turned into the right SQL for each database. |
-| `DotSqlMigrator` | Versioned schema changes, one counter per asset, so an older table grows the columns a newer build needs. |
+| `DotSqlDriverSqlite` | SQLite through godot-sqlite. One server, one file. |
+| `DotSqlDriverGateway` | PostgreSQL, MySQL/MariaDB or SQLite through a small HTTP gateway running beside the database. Several servers, one database. |
+| `tools/sql_gateway.py` | A reference gateway in Python. It handles one request at a time: fine for a few servers, meant to be copied rather than scaled. |
+| `DotSqlDialect` | Everywhere the databases differ: column types, upserts, placeholders, reserved words. |
+| `DotSqlSchema` | Tables described as data and turned into SQL for each database. |
+| `DotSqlMigrator` | Versioned schema changes, one counter per asset. |
 | `DotSql.from_config` | Builds a driver from a config dictionary, so a server picks its database in a file. |
 
-Needs **dot-core** and nothing else.
-
-### Other assets do not depend on this one
-
-dot-timer, dot-moderation, dot-leaderboard, dot-achievements and dot-stats each have a SQL store, and none of them names a class from this asset. They hold the driver in an untyped variable and call five methods on it (`query`, `execute`, `batch`, `upsert_sql`, `migrate`). So they still load in a project that does not have dot-sql, and SQL is something you add when you want it.
-
-### Why PostgreSQL and MySQL go through HTTP
-
-Speaking either wire protocol from GDScript means implementing an authentication handshake, a binary format and a connection pool. A half finished version of that is a security problem. A gateway is also the safer setup anyway: the database password stays on the gateway's machine instead of on every game server, and the gateway connects as a database user that can only touch the game's tables.
-
-The gateway takes a bearer token on every request. Keep it on a private address or put TLS in front of it.
-
-## Getting started
-
-```bash
-ln -s ../../dot-core/addons/dot_core addons/dot_core
-```
-
-In a game:
+## Use
 
 ```gdscript
 # One SQLite file on this server:
@@ -60,9 +39,9 @@ await store.open()          # creates or migrates its tables
 timers.store = store
 ```
 
-Keep the token in the config file. Environment variables and command line arguments are readable by every process on the machine.
+Keep the token in the config file. Environment variables and command lines are readable by every process on the machine.
 
-Running the reference gateway:
+Run the reference gateway:
 
 ```bash
 pip install "psycopg[binary]" pymysql      # only the one you need
@@ -70,26 +49,23 @@ echo "a long random token" > gateway.token
 python3 tools/sql_gateway.py --dialect mysql --dsn mysql://user:pass@127.0.0.1:3306/game --token-file gateway.token
 ```
 
+The gateway takes a bearer token on every request. Keep it on a private address or put TLS in front. It is the safer setup anyway: the database password stays on the gateway's machine, and the gateway can connect as a user that only touches the game's tables.
+
+## Other addons do not need this one
+
+dot-timer, dot-moderation, dot-leaderboard, dot-achievements and dot-stats each have a SQL store. They hold the driver in an untyped variable and call five methods on it (`query`, `execute`, `batch`, `upsert_sql`, `migrate`), so they load without dot-sql.
+
 ## Testing
 
-| Suite | What it checks | Checks |
-| --- | --- | --- |
-| `examples/sql_selftest.tscn` | Dialects, placeholders, table specs, upserts, migrations, config, with no database | 44 |
-| `examples/sql_live.tscn` | Real tables, upserts, emoji and quotes, run time precision, transactions and migrations against a real database | 16 per database |
+| Scene | Checks |
+| --- | --- |
+| `examples/sql_selftest.tscn` | Dialects, placeholders, table specs, upserts, migrations and config, with no database. |
+| `examples/sql_live.tscn` | Real tables, upserts, emoji and quotes, transactions and migrations against a real database. |
 
-```bash
-godot --headless --path . res://examples/sql_selftest.tscn
-tools/test_live.sh                                                     # SQLite
-DOT_SQL_PG_DSN=postgresql://u:p@127.0.0.1/test DOT_SQL_MYSQL_DSN=mysql://u:p@127.0.0.1:3306/test tools/test_live.sh
-```
+Import the project once, then run each scene headless with Godot. `tools/test_live.sh` runs the live suite on SQLite; set `DOT_SQL_PG_DSN` and `DOT_SQL_MYSQL_DSN` to include PostgreSQL and MySQL. It also runs other addons' live suites, such as `tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn`.
 
-`tools/test_live.sh` also runs other assets' live suites: `tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn`.
+## Status and licence
 
-## Not done yet
+Part of the TMC **dot-\*** family of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/modcommunity/dot-sql/issues) when you hit one.
 
-- The SQLite driver needs the godot-sqlite GDExtension, which this asset does not ship. `tools/fetch_sqlite.sh <your project>` installs a pinned, checksummed release (v4.9, MIT) into `addons/godot-sqlite`.
-- The reference gateway handles one request at a time. It is fine for a few servers and is meant to be copied, not scaled.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+MIT licence, see [LICENSE](LICENSE). The only closed part of the TMC platform is the web back end; you can use your own instead of TMC's.
