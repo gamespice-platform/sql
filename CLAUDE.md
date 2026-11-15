@@ -1,6 +1,6 @@
 # dot-sql
 
-SQLite, PostgreSQL and MySQL for the Dot family: drivers, one dialect layer, tables as plain data, and versioned migrations. Stores in other addons reach a driver by duck typing, so nothing depends on dot-sql.
+SQLite, PostgreSQL and MySQL for the Gamespice family: drivers, one dialect layer, tables as plain data, and versioned migrations. Stores in other addons reach a driver by duck typing, so nothing depends on dot-sql.
 
 Read the family [CLAUDE.md](../../CLAUDE.md) first.
 
