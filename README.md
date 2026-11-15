@@ -3,7 +3,7 @@ Lets dot addons keep their data in SQLite, PostgreSQL or MySQL/MariaDB, so recor
 ## Install
 
 1. Get [Godot 4.7](https://godotengine.org/download).
-2. Either use [dot-bootstrap](https://github.com/modcommunity/dot-bootstrap), which clones every project and links the addons, or copy `addons/dot_sql/` and [dot-core](https://github.com/modcommunity/dot-core)'s `addons/dot_core/` into your project and enable dot-sql in *Project > Project Settings > Plugins*.
+2. Either use [dot-bootstrap](https://github.com/gamespice-platform/bootstrap), which clones every project and links the addons, or copy `addons/dot_sql/` and [dot-core](https://github.com/gamespice-platform/core)'s `addons/dot_core/` into your project and enable dot-sql in *Project > Project Settings > Plugins*.
 3. For SQLite, run `tools/fetch_sqlite.sh <your project>`. It installs a pinned, checksummed release of [godot-sqlite](https://github.com/2shady4u/godot-sqlite) (MIT) into `addons/godot-sqlite`. This addon does not ship it.
 
 dot-core is the only dependency.
@@ -64,6 +64,6 @@ Import the project once, then run each scene headless with Godot. `tools/test_li
 
 ## Status and licence
 
-Part of the TMC **dot-\*** family of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/modcommunity/dot-sql/issues) when you hit one.
+Part of the TMC **dot-\*** family of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/gamespice-platform/sql/issues) when you hit one.
 
 MIT licence, see [LICENSE](LICENSE). The only closed part of the TMC platform is the web back end; you can use your own instead of TMC's.
