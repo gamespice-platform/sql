@@ -3,19 +3,19 @@
 #
 #   tools/test_live.sh                                   # dot-sql's own suite, SQLite only
 #   tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn
-#   DOT_SQL_PG_DSN=postgresql://u:p@127.0.0.1/dot_sql_test tools/test_live.sh
-#   DOT_SQL_MYSQL_DSN=mysql://u:p@127.0.0.1:3306/dot_sql_test tools/test_live.sh
+#   GS_SQL_PG_DSN=postgresql://u:p@127.0.0.1/dot_sql_test tools/test_live.sh
+#   GS_SQL_MYSQL_DSN=mysql://u:p@127.0.0.1:3306/dot_sql_test tools/test_live.sh
 #
 # SQLite always runs (Python ships it). Postgres and MySQL run when their DSN is set, and
-# need psycopg / pymysql importable by $DOT_SQL_PYTHON (default python3).
+# need psycopg / pymysql importable by GS_SQL_PYTHON (default python3).
 #
-# Any other addon's live suite is run the same way: it reads DOT_SQL_URL, DOT_SQL_DIALECT
-# and DOT_SQL_TOKEN_FILE, exactly as examples/sql_live.gd does.
+# Any other addon's live suite is run the same way: it reads GS_SQL_URL, GS_SQL_DIALECT
+# and GS_SQL_TOKEN_FILE, exactly as examples/sql_live.gd does.
 set -u
 here="$(cd "$(dirname "$0")/.." && pwd)"
 project="$(cd "${1:-$here}" && pwd)"
 scene="${2:-res://examples/sql_live.tscn}"
-python="${DOT_SQL_PYTHON:-python3}"
+python="${GS_SQL_PYTHON:-${DOT_SQL_PYTHON:-python3}}"
 godot="${GODOT:-godot}"
 work="$(mktemp -d)"
 trap 'kill $(jobs -p) 2>/dev/null; rm -rf "$work"' EXIT
@@ -40,7 +40,7 @@ run() {
         echo "== $dialect: the gateway did not start"; cat "$work/gw-$dialect.log"; failed=1; return
     fi
     echo "== $dialect"
-    DOT_SQL_URL="http://127.0.0.1:$port" DOT_SQL_DIALECT="$dialect" DOT_SQL_TOKEN_FILE="$work/token" \
+    GS_SQL_URL="http://127.0.0.1:$port" GS_SQL_DIALECT="$dialect" GS_SQL_TOKEN_FILE="$work/token" \
         timeout 120 "$godot" --headless --path "$project" "$scene" > "$work/out-$dialect.log" 2>&1
     local code=$?
     grep -v "^Godot Engine\|^$" "$work/out-$dialect.log" | grep -v "^  .* ok$" || true
@@ -58,7 +58,7 @@ run sqlite "$work/live.db"
 # has it (tools/fetch_sqlite.sh). The only run that reaches DotSqlDriverSqlite's calls.
 if [ -f "$project/addons/godot-sqlite/gdsqlite.gdextension" ]; then
     echo "== sqlite (extension)"
-    DOT_SQL_SQLITE_PATH="$work/direct.db" timeout 120 "$godot" --headless --path "$project" "$scene" \
+    GS_SQL_SQLITE_PATH="$work/direct.db" timeout 120 "$godot" --headless --path "$project" "$scene" \
         > "$work/out-direct.log" 2>&1
     code=$?
     # The extension prints its own ERROR for each statement a suite fails on purpose.
@@ -70,7 +70,7 @@ if [ -f "$project/addons/godot-sqlite/gdsqlite.gdextension" ]; then
 else
     echo "== sqlite (extension): not installed here; tools/fetch_sqlite.sh . to run it"
 fi
-[ -n "${DOT_SQL_PG_DSN:-}" ] && run postgres "$DOT_SQL_PG_DSN"
-[ -n "${DOT_SQL_MYSQL_DSN:-}" ] && run mysql "$DOT_SQL_MYSQL_DSN"
+[ -n "${GS_SQL_PG_DSN:-${DOT_SQL_PG_DSN:-}}" ] && run postgres "${GS_SQL_PG_DSN:-${DOT_SQL_PG_DSN:-}}"
+[ -n "${GS_SQL_MYSQL_DSN:-${DOT_SQL_MYSQL_DSN:-}}" ] && run mysql "${GS_SQL_MYSQL_DSN:-${DOT_SQL_MYSQL_DSN:-}}"
 
 exit $failed

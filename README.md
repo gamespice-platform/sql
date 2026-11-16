@@ -60,7 +60,7 @@ dot-timer, dot-moderation, dot-leaderboard, dot-achievements and dot-stats each 
 | `examples/sql_selftest.tscn` | Dialects, placeholders, table specs, upserts, migrations and config, with no database. |
 | `examples/sql_live.tscn` | Real tables, upserts, emoji and quotes, transactions and migrations against a real database. |
 
-Import the project once, then run each scene headless with Godot. `tools/test_live.sh` runs the live suite on SQLite; set `DOT_SQL_PG_DSN` and `DOT_SQL_MYSQL_DSN` to include PostgreSQL and MySQL. It also runs other addons' live suites, such as `tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn`.
+Import the project once, then run each scene headless with Godot. `tools/test_live.sh` runs the live suite on SQLite; set `GS_SQL_PG_DSN` and `GS_SQL_MYSQL_DSN` to include PostgreSQL and MySQL. It also runs other addons' live suites, such as `tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn`.
 
 ## Status and licence
 

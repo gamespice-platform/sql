@@ -7,7 +7,7 @@ extends Node
 ## Postgres and MySQL when a DSN is given, and runs this once per dialect:
 ##
 ## [codeblock]
-## DOT_SQL_URL=http://127.0.0.1:8780 DOT_SQL_DIALECT=sqlite DOT_SQL_TOKEN_FILE=/tmp/tok \
+## GS_SQL_URL=http://127.0.0.1:8780 GS_SQL_DIALECT=sqlite GS_SQL_TOKEN_FILE=/tmp/tok \
 ##     godot --headless --path . res://examples/sql_live.tscn
 ## [/codeblock]
 ##
@@ -22,7 +22,7 @@ var _failed := 0
 var _entered := 0
 var _completed := 0
 
-## A gateway, or the real godot-sqlite extension when DOT_SQL_SQLITE_PATH is set.
+## A gateway, or the real godot-sqlite extension when GS_SQL_SQLITE_PATH is set.
 var driver: DotSqlDriver = null
 
 
@@ -31,7 +31,7 @@ func _ready() -> void:
 
 	# The extension itself, no gateway: the only run that reaches DotSqlDriverSqlite's
 	# calls into godot-sqlite rather than the SQL they would send.
-	var sqlite_path := OS.get_environment("DOT_SQL_SQLITE_PATH")
+	var sqlite_path := (OS.get_environment("GS_SQL_SQLITE_PATH") if OS.has_environment("GS_SQL_SQLITE_PATH") else OS.get_environment("DOT_SQL_SQLITE_PATH"))
 	if sqlite_path != "":
 		var direct := DotSql.from_config({"driver": "sqlite", "path": sqlite_path}, self)
 		driver = direct.value
@@ -39,11 +39,11 @@ func _ready() -> void:
 		await _run()
 		return
 
-	var url := OS.get_environment("DOT_SQL_URL")
-	var dialect := DotSqlDialect.from_name(OS.get_environment("DOT_SQL_DIALECT"))
-	var token_file := OS.get_environment("DOT_SQL_TOKEN_FILE")
+	var url := (OS.get_environment("GS_SQL_URL") if OS.has_environment("GS_SQL_URL") else OS.get_environment("DOT_SQL_URL"))
+	var dialect := DotSqlDialect.from_name((OS.get_environment("GS_SQL_DIALECT") if OS.has_environment("GS_SQL_DIALECT") else OS.get_environment("DOT_SQL_DIALECT")))
+	var token_file := (OS.get_environment("GS_SQL_TOKEN_FILE") if OS.has_environment("GS_SQL_TOKEN_FILE") else OS.get_environment("DOT_SQL_TOKEN_FILE"))
 	if url == "" or dialect < 0 or token_file == "":
-		print("set DOT_SQL_SQLITE_PATH, or DOT_SQL_URL, DOT_SQL_DIALECT and DOT_SQL_TOKEN_FILE; see tools/test_live.sh")
+		print("set GS_SQL_SQLITE_PATH, or GS_SQL_URL, GS_SQL_DIALECT and GS_SQL_TOKEN_FILE; see tools/test_live.sh")
 		get_tree().quit(2)
 		return
 

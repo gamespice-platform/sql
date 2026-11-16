@@ -43,9 +43,9 @@ tools/test_live.sh                                                       # sql_l
 Live against Postgres and MariaDB, through `tools/sql_gateway.py`: a Python with `psycopg` and `pymysql` importable, a Postgres role and database `dot_sql_test`, and a MariaDB 11 container on 127.0.0.1:13306 (for example `docker run -d --name dot-sql-mariadb -p 127.0.0.1:13306:3306 -e MARIADB_DATABASE=dot_sql_test -e MARIADB_USER=dot_sql_test -e MARIADB_PASSWORD=... -e MARIADB_RANDOM_ROOT_PASSWORD=1 mariadb:11`):
 
 ```bash
-DOT_SQL_PYTHON=<venv>/bin/python \
-DOT_SQL_PG_DSN=postgresql://dot_sql_test:...@127.0.0.1/dot_sql_test \
-DOT_SQL_MYSQL_DSN=mysql://dot_sql_test:...@127.0.0.1:13306/dot_sql_test tools/test_live.sh
+GS_SQL_PYTHON=<venv>/bin/python \
+GS_SQL_PG_DSN=postgresql://dot_sql_test:...@127.0.0.1/dot_sql_test \
+GS_SQL_MYSQL_DSN=mysql://dot_sql_test:...@127.0.0.1:13306/dot_sql_test tools/test_live.sh
 ```
 
 The runner takes a project and a scene, so every store's live suite runs the same way: `tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn`, and likewise dot-moderation, dot-leaderboard, dot-achievements and dot-stats (`examples/<addon>_sql_live.tscn`). The extension prints `ERROR:  --> SQL error` for every failing statement, including ones a suite fails on purpose; `test_live.sh` filters those and still fails on `SCRIPT ERROR` or `Parse Error`.
