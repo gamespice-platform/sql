@@ -8,4 +8,4 @@ dot-moderation shipped a metadata table with a column named `key`, which every M
 
 ## The database directory did not exist
 
-The first run against the real extension found that SQLite creates the file but not its directory: `user://g2gfast/records.db` on a fresh server was "unable to open database file", and game-g2gfast fell back to files on every first boot. `DotSqlDriverSqlite.open()` makes the directory now.
+The first run against the real extension found that SQLite creates the file but not its directory: `user://airdrift/records.db` on a fresh server was "unable to open database file", and game-airdrift fell back to files on every first boot. `DotSqlDriverSqlite.open()` makes the directory now.

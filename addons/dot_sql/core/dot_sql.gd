@@ -5,7 +5,7 @@ extends RefCounted
 ## Builds a driver from configuration, so a game's config file chooses the database.
 ##
 ## [codeblock]
-## # cfg: { "sql": { "driver": "sqlite", "path": "user://g2gfast.db" } }
+## # cfg: { "sql": { "driver": "sqlite", "path": "user://airdrift.db" } }
 ## # cfg: { "sql": { "driver": "gateway", "url": "http://10.0.0.5:8780", "dialect": "mysql",
 ## #                 "token": "..." } }
 ## var made := DotSql.from_config(config.sql, self)

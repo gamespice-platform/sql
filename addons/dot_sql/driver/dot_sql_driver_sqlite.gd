@@ -73,7 +73,7 @@ func open() -> DotResult:
 
 	# SQLite creates the file but not the directory it goes in, and says only "unable to
 	# open database file". A game's default is a path under a directory of its own
-	# (user://g2gfast/records.db), which on a fresh server does not exist yet, so every
+	# (user://airdrift/records.db), which on a fresh server does not exist yet, so every
 	# first boot fell back to whatever the store does without a database.
 	if path != ":memory:":
 		var dir := path.get_base_dir()
