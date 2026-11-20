@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs a live SQL suite against real databases through tools/sql_gateway.py.
 #
-#   tools/test_live.sh                                   # dot-sql's own suite, SQLite only
+#   tools/test_live.sh                                   # GameSpice SQL's own suite, SQLite only
 #   tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn
 #   GS_SQL_PG_DSN=postgresql://u:p@127.0.0.1/dot_sql_test tools/test_live.sh
 #   GS_SQL_MYSQL_DSN=mysql://u:p@127.0.0.1:3306/dot_sql_test tools/test_live.sh

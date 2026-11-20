@@ -1,4 +1,4 @@
-# dot-sql design
+# GameSpice SQL design
 
 Why the addon is shaped the way it is, and why the obvious alternative is wrong at each point. The rules are one line each in [CLAUDE.md](../CLAUDE.md).
 
@@ -10,7 +10,7 @@ The same rule reaches games: a game delivered as a pack must not name `DotSql` e
 
 **The contract, as plain data:** statements use `?` in every dialect; `query` answers an Array of Dictionary rows; numbers may come back as float (a gateway's JSON has one number type), so a row mapper wraps integers in `int()`; JSON columns may come back as text; booleans may come back as bool, int, float or string; every method returns a `DotResult` and is a coroutine, so callers always `await`.
 
-**The dialect integers are frozen** (`DotSqlDialect.Kind`: `SQLITE = 0`, `POSTGRES = 1`, `MYSQL = 2`). mg-dangerous-delivery's bank and dot-moderation's schema compare against them without naming this class.
+**The dialect integers are frozen** (`DotSqlDialect.Kind`: `SQLITE = 0`, `POSTGRES = 1`, `MYSQL = 2`). mg-dangerous-delivery's bank and GameSpice Moderation's schema compare against them without naming this class.
 
 ## Where the three differ, handled once
 
@@ -23,7 +23,7 @@ The same rule reaches games: a game delivered as a pack must not name `DotSql` e
 | Upsert spelling | `DotSqlDialect.upsert()`: ON CONFLICT … excluded, or ON DUPLICATE KEY … VALUES() |
 | Reserved words | `RESERVED`, refused by `is_safe_identifier`, so `key` and `rank` never become columns |
 | Charset | utf8mb4 on MySQL, or a name with an emoji fails the insert |
-| MySQL evaluates `SET a = …, b = a + 1` left to right with the new `a` | not here: stores bind computed values instead. dot-timer's `note_progress` is the example |
+| MySQL evaluates `SET a = …, b = a + 1` left to right with the new `a` | not here: stores bind computed values instead. GameSpice Timer's `note_progress` is the example |
 
 The reserved-word and index rows are not hypothetical ([history](history.md#a-column-named-key)).
 

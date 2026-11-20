@@ -5,10 +5,10 @@ Lets GameSpice addons keep their data in SQLite, PostgreSQL or MySQL/MariaDB, so
 ## Install
 
 1. Get [Godot 4.7](https://godotengine.org/download).
-2. Either use [dot-bootstrap](https://github.com/gamespice-platform/bootstrap), which clones every project and links the addons, or copy `addons/dot_sql/` and [dot-core](https://github.com/gamespice-platform/core)'s `addons/dot_core/` into your project and enable dot-sql in *Project > Project Settings > Plugins*.
+2. Either use [GameSpice Bootstrap](https://github.com/gamespice-platform/bootstrap), which clones every project and links the addons, or copy `addons/dot_sql/` and [GameSpice Core](https://github.com/gamespice-platform/core)'s `addons/dot_core/` into your project and enable dot-sql in *Project > Project Settings > Plugins*.
 3. For SQLite, run `tools/fetch_sqlite.sh <your project>`. It installs a pinned, checksummed release of [godot-sqlite](https://github.com/2shady4u/godot-sqlite) (MIT) into `addons/godot-sqlite`. This addon does not ship it.
 
-dot-core is the only dependency.
+GameSpice Core is the only dependency.
 
 ## What is in it
 
@@ -53,7 +53,7 @@ The gateway takes a bearer token on every request. Keep it on a private address 
 
 ## Other addons do not need this one
 
-dot-timer, dot-moderation, dot-leaderboard, dot-achievements and dot-stats each have a SQL store. They hold the driver in an untyped variable and call five methods on it (`query`, `execute`, `batch`, `upsert_sql`, `migrate`), so they load without dot-sql.
+GameSpice Timer, GameSpice Moderation, GameSpice Leaderboard, GameSpice Achievements and GameSpice Stats each have a SQL store. They hold the driver in an untyped variable and call five methods on it (`query`, `execute`, `batch`, `upsert_sql`, `migrate`), so they load without GameSpice SQL.
 
 ## Testing
 

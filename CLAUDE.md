@@ -1,10 +1,10 @@
-# dot-sql
+# GameSpice SQL
 
-SQLite, PostgreSQL and MySQL for the Gamespice family: drivers, one dialect layer, tables as plain data, and versioned migrations. Stores in other addons reach a driver by duck typing, so nothing depends on dot-sql.
+SQLite, PostgreSQL and MySQL for the Gamespice family: drivers, one dialect layer, tables as plain data, and versioned migrations. Stores in other addons reach a driver by duck typing, so nothing depends on GameSpice SQL.
 
 Read the family [CLAUDE.md](../../CLAUDE.md) first.
 
-**The distributable is `addons/dot_sql/`.** It requires [dot-core](../dot-core) and nothing else (`ln -s ../../dot-core/addons/dot_core addons/dot_core`, gitignored). The SQLite driver also wants godot-sqlite in `addons/godot-sqlite` (gitignored; `tools/fetch_sqlite.sh .`).
+**The distributable is `addons/dot_sql/`.** It requires [GameSpice Core](../dot-core) and nothing else (`ln -s ../../dot-core/addons/dot_core addons/dot_core`, gitignored). The SQLite driver also wants godot-sqlite in `addons/godot-sqlite` (gitignored; `tools/fetch_sqlite.sh .`).
 
 ## Read before
 

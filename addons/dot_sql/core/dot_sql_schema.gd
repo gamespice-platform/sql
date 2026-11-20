@@ -5,9 +5,9 @@ extends RefCounted
 ## Tables as plain data, rendered to DDL per dialect.
 ##
 ## [b]A table is a [Dictionary], not an object of this class[/b], because the stores that
-## declare tables live in addons that must not name dot-sql (see [DotSqlDialect]). A store
+## declare tables live in addons that must not name GameSpice SQL (see [DotSqlDialect]). A store
 ## builds the dictionary and hands it to [method DotSqlDriver.ensure_table]; the driver,
-## which IS dot-sql, renders it. So the DDL for three dialects is written once, here,
+## which IS GameSpice SQL, renders it. So the DDL for three dialects is written once, here,
 ## rather than once per addon — and the next store does not get to forget that MySQL
 ## cannot index TEXT.
 ##

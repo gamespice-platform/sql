@@ -6,8 +6,8 @@ extends RefCounted
 ##
 ## [b]The values are integers on purpose, and they are frozen.[/b] Stores in other addons
 ## reach a driver duck-typed — `driver.dialect()` — so that an addon which keeps records in
-## SQL does not fail to parse in a project without dot-sql. An integer is the one thing such
-## a store can compare against without naming this class, and dot-moderation and
+## SQL does not fail to parse in a project without GameSpice SQL. An integer is the one thing such
+## a store can compare against without naming this class, and GameSpice Moderation and
 ## mg-dangerous-delivery already compare against 0, 1 and 2. Reordering this enum would
 ## silently hand every one of them the wrong SQL.
 ##
@@ -43,7 +43,7 @@ const TYPES := [KEY, TEXT, INT, BIGINT, REAL, BOOL, JSON_TEXT]
 ##
 ## [b]Refused rather than quoted.[/b] Quoting works until somebody writes a query by hand,
 ## or a second addon reads the table, and forgets — and the failure is a syntax error on
-## one database only, months later. dot-moderation shipped a column named `key` that
+## one database only, months later. GameSpice Moderation shipped a column named `key` that
 ## every MySQL refuses (`ERROR 1064`, measured on MariaDB 11) while SQLite and Postgres
 ## took it happily; `rank`, `row` and `groups` are the same trap on MySQL 8, and `user`,
 ## `offset` and `order` on Postgres. Not exhaustive — the names a game table is likely to

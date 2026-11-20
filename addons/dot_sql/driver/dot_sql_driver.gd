@@ -10,10 +10,10 @@ extends RefCounted
 ## GDScript can do — choose the tables, build parameterised statements, bind values, map
 ## rows — and the one step that needs a native library is behind this class.
 ##
-## [b]Stores reach a driver duck-typed.[/b] dot-timer, dot-stats and the rest hold it in an
+## [b]Stores reach a driver duck-typed.[/b] GameSpice Timer, GameSpice Stats and the rest hold it in an
 ## untyped variable and call [method query], [method execute], [method dialect] and
 ## [method ensure_table] on it, so none of them fails to parse in a project that has not
-## installed dot-sql. That is the whole public contract and it is plain data in and out:
+## installed GameSpice SQL. That is the whole public contract and it is plain data in and out:
 ##
 ## - statements use [code]?[/code] placeholders, in every dialect;
 ## - [method query] answers an [Array] of [Dictionary] rows keyed by column name;

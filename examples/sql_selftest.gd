@@ -45,7 +45,7 @@ func _run() -> void:
 func _test_dialects() -> void:
 	_section("dialects")
 
-	# Frozen: dot-moderation and mg-dangerous-delivery compare against these integers.
+	# Frozen: GameSpice Moderation and mg-dangerous-delivery compare against these integers.
 	_check("sqlite is 0, postgres 1, mysql 2", DotSqlDialect.Kind.SQLITE == 0 and DotSqlDialect.Kind.POSTGRES == 1 and DotSqlDialect.Kind.MYSQL == 2)
 	_check("names round-trip", DotSqlDialect.from_name(DotSqlDialect.name_of(DotSqlDialect.Kind.MYSQL)) == DotSqlDialect.Kind.MYSQL)
 	_check("operator spellings are accepted", DotSqlDialect.from_name(" PostgreSQL ") == 1 and DotSqlDialect.from_name("mariadb") == 2)
@@ -55,7 +55,7 @@ func _test_dialects() -> void:
 	_check("a real is double precision in postgres", DotSqlDialect.column_type(DotSqlDialect.REAL, 1) == "DOUBLE PRECISION")
 	_check("safe identifiers pass", DotSqlDialect.is_safe_identifier("dot_timer_records") and DotSqlDialect.is_safe_identifier("_x1"))
 	_check("unsafe identifiers fail", not DotSqlDialect.is_safe_identifier("x; DROP TABLE y") and not DotSqlDialect.is_safe_identifier("1abc") and not DotSqlDialect.is_safe_identifier("a".repeat(64)))
-	# `key` is what dot-moderation shipped, and MySQL refuses it; `rank` is the one a
+	# `key` is what GameSpice Moderation shipped, and MySQL refuses it; `rank` is the one a
 	# timer table wants, and MySQL 8 refuses that too.
 	_check("reserved words fail, in any case", not DotSqlDialect.is_safe_identifier("key") and not DotSqlDialect.is_safe_identifier("RANK") and not DotSqlDialect.is_safe_identifier("user"))
 

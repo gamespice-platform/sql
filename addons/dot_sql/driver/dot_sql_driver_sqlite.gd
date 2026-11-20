@@ -126,7 +126,7 @@ func _execute(sql: String, params: Array) -> DotResult:
 	if not bool(_db.call("query_with_bindings", sql, params)):
 		return DotResult.fail(DotError.CODE_IO, "A statement failed.", str(_db.get("error_message")))
 	# The rows the statement changed, as the gateway reports them: the contract callers
-	# rely on (dot-stats' revision guard, a store's "was there anything to remove").
+	# rely on (GameSpice Stats' revision guard, a store's "was there anything to remove").
 	# `true` here read as success to every one of them, so a lost race on a shared
 	# SQLite file was never detected.
 	_db.call("query", "SELECT changes() AS n")
