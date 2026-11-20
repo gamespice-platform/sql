@@ -1,4 +1,4 @@
-[![dot-sql - GameSpice addon](docs/banner.png)](https://moddingcommunity.com/a/264-dot-sql)
+[![SQL - GameSpice addon](docs/banner.png)](https://moddingcommunity.com/a/264-dot-sql)
 
 Lets GameSpice addons keep their data in SQLite, PostgreSQL or MySQL/MariaDB, so records, statistics, achievements and bans can live in a real database that several servers share. Godot has no database client of its own; this is the layer that supplies one.
 
