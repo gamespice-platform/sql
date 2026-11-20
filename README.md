@@ -1,6 +1,6 @@
 [![dot-sql - GameSpice addon](docs/banner.png)](https://moddingcommunity.com/a/264-dot-sql)
 
-Lets Gamespice addons keep their data in SQLite, PostgreSQL or MySQL/MariaDB, so records, statistics, achievements and bans can live in a real database that several servers share. Godot has no database client of its own; this is the layer that supplies one.
+Lets GameSpice addons keep their data in SQLite, PostgreSQL or MySQL/MariaDB, so records, statistics, achievements and bans can live in a real database that several servers share. Godot has no database client of its own; this is the layer that supplies one.
 
 ## Install
 
@@ -66,6 +66,6 @@ Import the project once, then run each scene headless with Godot. `tools/test_li
 
 ## Status and licence
 
-Part of the [Gamespice](https://gamespice.net) platform: a family of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/gamespice-platform/sql/issues) when you hit one.
+Part of the [**GameSpice**](https://gamespice.net) platform: a family of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/gamespice-platform/sql/issues) when you hit one.
 
-MIT licence, see [LICENSE](LICENSE). The only closed part of the [Gamespice](https://gamespice.net) platform is the web back end; you can use your own instead of Gamespice's.
+MIT licence, see [LICENSE](LICENSE). The only closed part of the [**GameSpice**](https://gamespice.net) platform is the web back end; you can use your own instead of GameSpice's.
