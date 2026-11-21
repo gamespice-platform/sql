@@ -4,7 +4,7 @@ SQLite, PostgreSQL and MySQL for the Gamespice family: drivers, one dialect laye
 
 Read the family [CLAUDE.md](../../CLAUDE.md) first.
 
-**The distributable is `addons/dot_sql/`.** It requires [GameSpice Core](../dot-core) and nothing else (`ln -s ../../dot-core/addons/dot_core addons/dot_core`, gitignored). The SQLite driver also wants godot-sqlite in `addons/godot-sqlite` (gitignored; `tools/fetch_sqlite.sh .`).
+**The distributable is `addons/gs_sql/`.** It requires [GameSpice Core](../gs-core) and nothing else (`ln -s ../../gs-core/addons/gs_core addons/gs_core`, gitignored). The SQLite driver also wants godot-sqlite in `addons/godot-sqlite` (gitignored; `tools/fetch_sqlite.sh .`).
 
 ## Read before
 
@@ -17,14 +17,14 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first.
 
 | Path | What |
 | --- | --- |
-| `addons/dot_sql/core/dot_sql.gd` | `GSSql`: `from_config` builds a driver (gateway or SQLite) |
-| `addons/dot_sql/core/dot_sql_dialect.gd` | `GSSqlDialect`: frozen `Kind`, column types, `RESERVED`, `is_safe_identifier`, `numbered`, `upsert` |
-| `addons/dot_sql/core/dot_sql_schema.gd` | `GSSqlSchema`: a table spec (plain data) to DDL per dialect |
-| `addons/dot_sql/core/dot_sql_migrator.gd` | `GSSqlMigrator`: per-component versions in `dot_sql_migrations` |
-| `addons/dot_sql/driver/dot_sql_driver.gd` | `GSSqlDriver`: the base and the duck-typed surface (`query`, `execute`, `batch`, `upsert_sql`, `migrate`, `ensure_table`) |
-| `addons/dot_sql/driver/dot_sql_driver_gateway.gd` | `GSSqlDriverGateway`: HTTP to a gateway, `/query` and `/batch` |
-| `addons/dot_sql/driver/dot_sql_driver_sqlite.gd` | `GSSqlDriverSqlite`: the godot-sqlite extension |
-| `addons/dot_sql/driver/dot_sql_driver_recording.gd` | `GSSqlDriverRecording`: records statements, for suites |
+| `addons/gs_sql/core/gs_sql.gd` | `GSSql`: `from_config` builds a driver (gateway or SQLite) |
+| `addons/gs_sql/core/gs_sql_dialect.gd` | `GSSqlDialect`: frozen `Kind`, column types, `RESERVED`, `is_safe_identifier`, `numbered`, `upsert` |
+| `addons/gs_sql/core/gs_sql_schema.gd` | `GSSqlSchema`: a table spec (plain data) to DDL per dialect |
+| `addons/gs_sql/core/gs_sql_migrator.gd` | `GSSqlMigrator`: per-component versions in `gs_sql_migrations` |
+| `addons/gs_sql/driver/gs_sql_driver.gd` | `GSSqlDriver`: the base and the duck-typed surface (`query`, `execute`, `batch`, `upsert_sql`, `migrate`, `ensure_table`) |
+| `addons/gs_sql/driver/gs_sql_driver_gateway.gd` | `GSSqlDriverGateway`: HTTP to a gateway, `/query` and `/batch` |
+| `addons/gs_sql/driver/gs_sql_driver_sqlite.gd` | `GSSqlDriverSqlite`: the godot-sqlite extension |
+| `addons/gs_sql/driver/gs_sql_driver_recording.gd` | `GSSqlDriverRecording`: records statements, for suites |
 | `tools/sql_gateway.py` | the reference gateway (SQLite, Postgres, MySQL) |
 | `tools/test_live.sh` | runs a live suite against SQLite, the extension, and any database given a DSN |
 | `tools/fetch_sqlite.sh` | installs pinned godot-sqlite into a project |
@@ -40,19 +40,19 @@ tools/fetch_sqlite.sh .                                                  # once,
 tools/test_live.sh                                                       # sql_live via the gateway on SQLite, then the extension
 ```
 
-Live against Postgres and MariaDB, through `tools/sql_gateway.py`: a Python with `psycopg` and `pymysql` importable, a Postgres role and database `dot_sql_test`, and a MariaDB 11 container on 127.0.0.1:13306 (for example `docker run -d --name dot-sql-mariadb -p 127.0.0.1:13306:3306 -e MARIADB_DATABASE=dot_sql_test -e MARIADB_USER=dot_sql_test -e MARIADB_PASSWORD=... -e MARIADB_RANDOM_ROOT_PASSWORD=1 mariadb:11`):
+Live against Postgres and MariaDB, through `tools/sql_gateway.py`: a Python with `psycopg` and `pymysql` importable, a Postgres role and database `gs_sql_test`, and a MariaDB 11 container on 127.0.0.1:13306 (for example `docker run -d --name gs-sql-mariadb -p 127.0.0.1:13306:3306 -e MARIADB_DATABASE=gs_sql_test -e MARIADB_USER=gs_sql_test -e MARIADB_PASSWORD=... -e MARIADB_RANDOM_ROOT_PASSWORD=1 mariadb:11`):
 
 ```bash
 GS_SQL_PYTHON=<venv>/bin/python \
-GS_SQL_PG_DSN=postgresql://dot_sql_test:...@127.0.0.1/dot_sql_test \
-GS_SQL_MYSQL_DSN=mysql://dot_sql_test:...@127.0.0.1:13306/dot_sql_test tools/test_live.sh
+GS_SQL_PG_DSN=postgresql://gs_sql_test:...@127.0.0.1/gs_sql_test \
+GS_SQL_MYSQL_DSN=mysql://gs_sql_test:...@127.0.0.1:13306/gs_sql_test tools/test_live.sh
 ```
 
-The runner takes a project and a scene, so every store's live suite runs the same way: `tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn`, and likewise dot-moderation, dot-leaderboard, dot-achievements and dot-stats (`examples/<addon>_sql_live.tscn`). The extension prints `ERROR:  --> SQL error` for every failing statement, including ones a suite fails on purpose; `test_live.sh` filters those and still fails on `SCRIPT ERROR` or `Parse Error`.
+The runner takes a project and a scene, so every store's live suite runs the same way: `tools/test_live.sh ../gs-timer res://examples/timer_sql_live.tscn`, and likewise gs-moderation, gs-leaderboard, gs-achievements and gs-stats (`examples/<addon>_sql_live.tscn`). The extension prints `ERROR:  --> SQL error` for every failing statement, including ones a suite fails on purpose; `test_live.sh` filters those and still fails on `SCRIPT ERROR` or `Parse Error`.
 
 ## Rules that bite
 
-- Never name a `GSSql*` class from a store or a delivered game; hold the driver untyped, or load `dot_sql.gd` by path. [design](docs/design.md#stores-reach-a-driver-duck-typed)
+- Never name a `GSSql*` class from a store or a delivered game; hold the driver untyped, or load `gs_sql.gd` by path. [design](docs/design.md#stores-reach-a-driver-duck-typed)
 - `?` placeholders everywhere; wrap integers from rows in `int()`; always `await`. [design](docs/design.md#stores-reach-a-driver-duck-typed)
 - `GSSqlDialect.Kind` values are frozen; other repos compare against 0, 1, 2. [design](docs/design.md#stores-reach-a-driver-duck-typed)
 - A dialect difference is handled in `GSSqlDialect` or `GSSqlSchema` once, never in a store; never use a `RESERVED` word as a column. [design](docs/design.md#where-the-three-differ-handled-once)

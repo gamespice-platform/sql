@@ -4,9 +4,9 @@ Why the addon is shaped the way it is, and why the obvious alternative is wrong 
 
 ## Stores reach a driver duck-typed
 
-Every addon with a SQL store (dot-timer, dot-moderation, dot-leaderboard, dot-achievements, dot-stats) holds its driver in an untyped variable and calls `query`, `execute`, `batch`, `upsert_sql`, `migrate` and `ensure_table` on it. None of them names a `GSSql*` class. In GDScript naming a `class_name` the project lacks is a parse error that takes every referencing script down with it, so a store that typed its driver as `GSSqlDriver` would make its whole addon fail to load in a project without dot-sql. Duck-typed, SQL is a thing a host adds. Only examples (suites) name dot-sql classes, and a repository whose suites do lists `/addons/dot_sql` in its `.gitignore` as a test dependency. No addon depends on dot-sql, and that is the design.
+Every addon with a SQL store (gs-timer, gs-moderation, gs-leaderboard, gs-achievements, gs-stats) holds its driver in an untyped variable and calls `query`, `execute`, `batch`, `upsert_sql`, `migrate` and `ensure_table` on it. None of them names a `GSSql*` class. In GDScript naming a `class_name` the project lacks is a parse error that takes every referencing script down with it, so a store that typed its driver as `GSSqlDriver` would make its whole addon fail to load in a project without gs-sql. Duck-typed, SQL is a thing a host adds. Only examples (suites) name gs-sql classes, and a repository whose suites do lists `/addons/gs_sql` in its `.gitignore` as a test dependency. No addon depends on gs-sql, and that is the design.
 
-The same rule reaches games: a game delivered as a pack must not name `GSSql` either, because a pack parses against whatever addons the host build carries. game-airdrift loads `res://addons/dot_sql/core/dot_sql.gd` by path and calls `from_config` on the script.
+The same rule reaches games: a game delivered as a pack must not name `GSSql` either, because a pack parses against whatever addons the host build carries. game-airdrift loads `res://addons/gs_sql/core/gs_sql.gd` by path and calls `from_config` on the script.
 
 **The contract, as plain data:** statements use `?` in every dialect; `query` answers an Array of Dictionary rows; numbers may come back as float (a gateway's JSON has one number type), so a row mapper wraps integers in `int()`; JSON columns may come back as text; booleans may come back as bool, int, float or string; every method returns a `GSResult` and is a coroutine, so callers always `await`.
 
@@ -29,7 +29,7 @@ The reserved-word and index rows are not hypothetical ([history](history.md#a-co
 
 ## Migrations
 
-`GSSqlMigrator` keeps one row per component in `dot_sql_migrations`. A component's steps are an Array; step N brings version N to N+1. A step is a list of SQL strings, `[sql, params]` pairs, table specs, or Callables taking the driver (for a step that differs per dialect). Append a step, never edit one. A database at a version higher than the code knows is refused with `CODE_VERSION`. Two servers migrating one database at once is normal: a failed step re-reads the counter and carries on if the other server got there first. Stores name their component `<addon>:<prefix or table>` so two copies with different table names keep separate versions.
+`GSSqlMigrator` keeps one row per component in `gs_sql_migrations`. A component's steps are an Array; step N brings version N to N+1. A step is a list of SQL strings, `[sql, params]` pairs, table specs, or Callables taking the driver (for a step that differs per dialect). Append a step, never edit one. A database at a version higher than the code knows is refused with `CODE_VERSION`. Two servers migrating one database at once is normal: a failed step re-reads the counter and carries on if the other server got there first. Stores name their component `<addon>:<prefix or table>` so two copies with different table names keep separate versions.
 
 ## The gateway
 

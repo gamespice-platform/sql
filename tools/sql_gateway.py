@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A reference SQL gateway for dot-sql's GSSqlDriverGateway.
+"""A reference SQL gateway for gs-sql's GSSqlDriverGateway.
 
 Godot cannot speak the Postgres or MySQL wire protocols, so a game server reaches those
 databases through a small HTTP service that holds the credentials instead. This is one,
@@ -21,11 +21,11 @@ What it does and does not protect:
 - It binds 127.0.0.1 unless told otherwise. Put TLS in front of it (nginx) before exposing
   it; over plain HTTP the token is readable by anybody on the path.
 - It runs whatever SQL the holder of the token sends. The fence is the DATABASE USER it
-  connects as: grant that user rights on the game's tables (`dot_*`) and nothing else.
+  connects as: grant that user rights on the game's tables (`gs_*`) and nothing else.
   A gateway that tried to parse SQL to decide what is allowed would be a worse fence than
   the database's own privilege system, and a false sense of one.
 
-The contract (see addons/dot_sql/driver/dot_sql_driver_gateway.gd):
+The contract (see addons/gs_sql/driver/gs_sql_driver_gateway.gd):
 
     POST /query  {"sql", "params", "dialect"}            -> {"rows": [...], "affected": n}
     POST /batch  {"statements": [{"sql","params"}], ...} -> {"done": n}   one transaction
@@ -187,7 +187,7 @@ class Backend:
 
 def make_handler(backend: Backend, token: str):
     class Handler(BaseHTTPRequestHandler):
-        server_version = "dot-sql-gateway/1"
+        server_version = "gs-sql-gateway/1"
 
         def log_message(self, fmt, *args):
             # Statements are not logged: they carry player names and whatever else a game

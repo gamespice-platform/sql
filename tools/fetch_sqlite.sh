@@ -27,7 +27,7 @@ project="${1:?usage: fetch_sqlite.sh <project directory>}"
 [ -f "$project/project.godot" ] || { echo "fetch_sqlite: $project has no project.godot" >&2; exit 2; }
 dest="$project/addons/godot-sqlite"
 
-if [ -f "$dest/.dot-sql-version" ] && [ "$(cat "$dest/.dot-sql-version")" = "$VERSION" ]; then
+if [ -f "$dest/.gs-sql-version" ] && [ "$(cat "$dest/.gs-sql-version")" = "$VERSION" ]; then
     echo "fetch_sqlite: godot-sqlite $VERSION already in $dest"
     exit 0
 fi
@@ -62,7 +62,7 @@ src="$work/x/addons/godot-sqlite"
 rm -rf "$dest"
 mkdir -p "$(dirname "$dest")"
 mv "$src" "$dest"
-echo "$VERSION" > "$dest/.dot-sql-version"
+echo "$VERSION" > "$dest/.gs-sql-version"
 echo "fetch_sqlite: installed godot-sqlite $VERSION in $dest"
 echo "fetch_sqlite: now run: godot --headless --path $project --import"
 echo "fetch_sqlite: (Godot loads only the extensions .godot/extension_list.cfg names, and only an import writes it)"

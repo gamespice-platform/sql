@@ -13,9 +13,9 @@ extends RefCounted
 ## [codeblock]
 ## var steps := [
 ##     [records_table, stages_table],                         # -> 1: plain table specs
-##     ["ALTER TABLE dot_timer_records ADD COLUMN flags INTEGER NOT NULL DEFAULT 0"],  # -> 2
+##     ["ALTER TABLE gs_timer_records ADD COLUMN flags INTEGER NOT NULL DEFAULT 0"],  # -> 2
 ## ]
-## await driver.migrate("dot_timer", steps)
+## await driver.migrate("gs_timer", steps)
 ## [/codeblock]
 ##
 ## A step is an [Array] whose entries are a SQL [String], [code][sql, params][/code], a
@@ -32,7 +32,7 @@ extends RefCounted
 ## not, and the second server's fails. So a failed step re-reads the counter, and if the
 ## other server got there first, carries on.
 
-const TABLE := "dot_sql_migrations"
+const TABLE := "gs_sql_migrations"
 
 const CHANNEL := "sql.migrate"
 

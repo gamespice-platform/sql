@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="dot-sql"
+config/name="gs-sql"
 config/description="SQLite, PostgreSQL and MySQL for the Gamespice family: drivers, one dialect layer, tables as plain data, and versioned migrations."
 config/version="0.1.0"
 run/main_scene="res://examples/sql_selftest.tscn"
@@ -24,7 +24,7 @@ window/size/viewport_height=900
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/dot_core/plugin.cfg", "res://addons/dot_sql/plugin.cfg")
+enabled=PackedStringArray("res://addons/gs_core/plugin.cfg", "res://addons/gs_sql/plugin.cfg")
 
 [importer_defaults]
 

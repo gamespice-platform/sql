@@ -13,7 +13,7 @@ extends RefCounted
 ##
 ## [codeblock]
 ## {
-##     "name": "dot_timer_records",
+##     "name": "gs_timer_records",
 ##     "columns": [
 ##         {"name": "map", "type": "key", "null": false},
 ##         {"name": "time", "type": "real", "null": false},

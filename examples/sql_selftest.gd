@@ -1,6 +1,6 @@
 extends Node
 
-## Exercises dot-sql without a database: the dialect layer, the DDL, the migrator's
+## Exercises gs-sql without a database: the dialect layer, the DDL, the migrator's
 ## bookkeeping and the config factory, all against [GSSqlDriverRecording].
 ##
 ## Whether the SQL is VALID is the other suite's job — `examples/sql_live.tscn`, run by
@@ -27,7 +27,7 @@ func _ready() -> void:
 
 
 func _run() -> void:
-	print("dot-sql self-test")
+	print("gs-sql self-test")
 	print("")
 
 	_test_dialects()
@@ -53,7 +53,7 @@ func _test_dialects() -> void:
 	_check("an indexed string is VARCHAR on mysql only", GSSqlDialect.column_type(GSSqlDialect.KEY, 2) == "VARCHAR(191)" and GSSqlDialect.column_type(GSSqlDialect.KEY, 1) == "TEXT")
 	# Single precision in Postgres loses a run's thousandths past a few hours.
 	_check("a real is double precision in postgres", GSSqlDialect.column_type(GSSqlDialect.REAL, 1) == "DOUBLE PRECISION")
-	_check("safe identifiers pass", GSSqlDialect.is_safe_identifier("dot_timer_records") and GSSqlDialect.is_safe_identifier("_x1"))
+	_check("safe identifiers pass", GSSqlDialect.is_safe_identifier("gs_timer_records") and GSSqlDialect.is_safe_identifier("_x1"))
 	_check("unsafe identifiers fail", not GSSqlDialect.is_safe_identifier("x; DROP TABLE y") and not GSSqlDialect.is_safe_identifier("1abc") and not GSSqlDialect.is_safe_identifier("a".repeat(64)))
 	# `key` is what GameSpice Moderation shipped, and MySQL refuses it; `rank` is the one a
 	# timer table wants, and MySQL 8 refuses that too.
@@ -77,7 +77,7 @@ func _test_placeholders() -> void:
 
 func _table() -> Dictionary:
 	return {
-		"name": "dot_test_rows",
+		"name": "gs_test_rows",
 		"columns": [
 			{"name": "id", "type": GSSqlDialect.KEY, "null": false},
 			{"name": "label", "type": GSSqlDialect.TEXT},
@@ -97,9 +97,9 @@ func _test_schema() -> void:
 
 	var sqlite := GSSqlSchema.ddl(table, GSSqlDialect.Kind.SQLITE)
 	var mysql := GSSqlSchema.ddl(table, GSSqlDialect.Kind.MYSQL)
-	_check("sqlite: a table and a separate index", sqlite.size() == 2 and sqlite[1].begins_with("CREATE INDEX IF NOT EXISTS dot_test_rows_score"))
+	_check("sqlite: a table and a separate index", sqlite.size() == 2 and sqlite[1].begins_with("CREATE INDEX IF NOT EXISTS gs_test_rows_score"))
 	# MySQL has no CREATE INDEX IF NOT EXISTS, so the index has to live inside the table.
-	_check("mysql: the index is inside the table", mysql.size() == 1 and mysql[0].contains("KEY dot_test_rows_score (score)"))
+	_check("mysql: the index is inside the table", mysql.size() == 1 and mysql[0].contains("KEY gs_test_rows_score (score)"))
 	_check("mysql: utf8mb4", mysql[0].ends_with("DEFAULT CHARSET=utf8mb4"))
 	_check("a boolean default is 0", sqlite[0].contains("flag INTEGER DEFAULT 0"))
 
@@ -151,22 +151,22 @@ func _test_migrator() -> void:
 
 	var steps := [
 		[_table()],
-		["ALTER TABLE dot_test_rows ADD COLUMN extra TEXT"],
+		["ALTER TABLE gs_test_rows ADD COLUMN extra TEXT"],
 	]
 
-	var result: GSResult = await driver.migrate("dot_test", steps)
+	var result: GSResult = await driver.migrate("gs_test", steps)
 	_check("a fresh database migrates to the last step", result.ok and int(result.value) == 2, result)
-	_check("both steps ran", driver.matching("CREATE TABLE IF NOT EXISTS dot_test_rows").size() == 1 and driver.matching("ADD COLUMN extra").size() == 1)
-	var recorded := driver.matching("INSERT INTO dot_sql_migrations")
+	_check("both steps ran", driver.matching("CREATE TABLE IF NOT EXISTS gs_test_rows").size() == 1 and driver.matching("ADD COLUMN extra").size() == 1)
+	var recorded := driver.matching("INSERT INTO gs_sql_migrations")
 	_check("each step is recorded as it lands", recorded.size() == 2 and int(recorded[1]["params"][1]) == 2)
 
 	driver.clear()
 	driver.answers = {"SELECT version FROM": [{"version": 2}]}
-	result = await driver.migrate("dot_test", steps)
+	result = await driver.migrate("gs_test", steps)
 	_check("an up-to-date database runs nothing", result.ok and driver.matching("ALTER").is_empty())
 
 	driver.answers = {"SELECT version FROM": [{"version": 3.0}]}
-	result = await driver.migrate("dot_test", steps)
+	result = await driver.migrate("gs_test", steps)
 	_check("a database from a newer build is refused", not result.ok and result.code() == GSError.CODE_VERSION)
 
 	driver.clear()
@@ -176,8 +176,8 @@ func _test_migrator() -> void:
 		[_table()],
 		[func(_d) -> GSResult: return GSResult.fail(GSError.CODE_IO, "boom")],
 	]
-	result = await driver.migrate("dot_test", failing)
-	_check("a failed step stops the migration", not result.ok and driver.matching("INSERT INTO dot_sql_migrations").is_empty())
+	result = await driver.migrate("gs_test", failing)
+	_check("a failed step stops the migration", not result.ok and driver.matching("INSERT INTO gs_sql_migrations").is_empty())
 
 	result = await driver.migrate("", steps)
 	_check("a nameless component is refused", not result.ok)

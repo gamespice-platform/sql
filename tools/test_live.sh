@@ -2,9 +2,9 @@
 # Runs a live SQL suite against real databases through tools/sql_gateway.py.
 #
 #   tools/test_live.sh                                   # GameSpice SQL's own suite, SQLite only
-#   tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn
-#   GS_SQL_PG_DSN=postgresql://u:p@127.0.0.1/dot_sql_test tools/test_live.sh
-#   GS_SQL_MYSQL_DSN=mysql://u:p@127.0.0.1:3306/dot_sql_test tools/test_live.sh
+#   tools/test_live.sh ../gs-timer res://examples/timer_sql_live.tscn
+#   GS_SQL_PG_DSN=postgresql://u:p@127.0.0.1/gs_sql_test tools/test_live.sh
+#   GS_SQL_MYSQL_DSN=mysql://u:p@127.0.0.1:3306/gs_sql_test tools/test_live.sh
 #
 # SQLite always runs (Python ships it). Postgres and MySQL run when their DSN is set, and
 # need psycopg / pymysql importable by GS_SQL_PYTHON (default python3).
@@ -15,7 +15,7 @@ set -u
 here="$(cd "$(dirname "$0")/.." && pwd)"
 project="$(cd "${1:-$here}" && pwd)"
 scene="${2:-res://examples/sql_live.tscn}"
-python="${GS_SQL_PYTHON:-${DOT_SQL_PYTHON:-python3}}"
+python="${GS_SQL_PYTHON:-python3}"
 godot="${GODOT:-godot}"
 work="$(mktemp -d)"
 trap 'kill $(jobs -p) 2>/dev/null; rm -rf "$work"' EXIT
@@ -70,7 +70,7 @@ if [ -f "$project/addons/godot-sqlite/gdsqlite.gdextension" ]; then
 else
     echo "== sqlite (extension): not installed here; tools/fetch_sqlite.sh . to run it"
 fi
-[ -n "${GS_SQL_PG_DSN:-${DOT_SQL_PG_DSN:-}}" ] && run postgres "${GS_SQL_PG_DSN:-${DOT_SQL_PG_DSN:-}}"
-[ -n "${GS_SQL_MYSQL_DSN:-${DOT_SQL_MYSQL_DSN:-}}" ] && run mysql "${GS_SQL_MYSQL_DSN:-${DOT_SQL_MYSQL_DSN:-}}"
+[ -n "${GS_SQL_PG_DSN:-}" ] && run postgres "${GS_SQL_PG_DSN:-}"
+[ -n "${GS_SQL_MYSQL_DSN:-}" ] && run mysql "${GS_SQL_MYSQL_DSN:-}"
 
 exit $failed

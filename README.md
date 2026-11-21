@@ -5,7 +5,7 @@ Lets GameSpice addons keep their data in SQLite, PostgreSQL or MySQL/MariaDB, so
 ## Install
 
 1. Get [Godot 4.7](https://godotengine.org/download).
-2. Either use [GameSpice Bootstrap](https://github.com/gamespice-platform/bootstrap), which clones every project and links the addons, or copy `addons/dot_sql/` and [GameSpice Core](https://github.com/gamespice-platform/core)'s `addons/dot_core/` into your project and enable dot-sql in *Project > Project Settings > Plugins*.
+2. Either use [GameSpice Bootstrap](https://github.com/gamespice-platform/bootstrap), which clones every project and links the addons, or copy `addons/gs_sql/` and [GameSpice Core](https://github.com/gamespice-platform/core)'s `addons/gs_core/` into your project and enable gs-sql in *Project > Project Settings > Plugins*.
 3. For SQLite, run `tools/fetch_sqlite.sh <your project>`. It installs a pinned, checksummed release of [godot-sqlite](https://github.com/2shady4u/godot-sqlite) (MIT) into `addons/godot-sqlite`. This addon does not ship it.
 
 GameSpice Core is the only dependency.
@@ -62,7 +62,7 @@ GameSpice Timer, GameSpice Moderation, GameSpice Leaderboard, GameSpice Achievem
 | `examples/sql_selftest.tscn` | Dialects, placeholders, table specs, upserts, migrations and config, with no database. |
 | `examples/sql_live.tscn` | Real tables, upserts, emoji and quotes, transactions and migrations against a real database. |
 
-Import the project once, then run each scene headless with Godot. `tools/test_live.sh` runs the live suite on SQLite; set `GS_SQL_PG_DSN` and `GS_SQL_MYSQL_DSN` to include PostgreSQL and MySQL. It also runs other addons' live suites, such as `tools/test_live.sh ../dot-timer res://examples/timer_sql_live.tscn`.
+Import the project once, then run each scene headless with Godot. `tools/test_live.sh` runs the live suite on SQLite; set `GS_SQL_PG_DSN` and `GS_SQL_MYSQL_DSN` to include PostgreSQL and MySQL. It also runs other addons' live suites, such as `tools/test_live.sh ../gs-timer res://examples/timer_sql_live.tscn`.
 
 ## Status and licence
 

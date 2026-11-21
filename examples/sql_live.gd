@@ -31,17 +31,17 @@ func _ready() -> void:
 
 	# The extension itself, no gateway: the only run that reaches GSSqlDriverSqlite's
 	# calls into godot-sqlite rather than the SQL they would send.
-	var sqlite_path := (OS.get_environment("GS_SQL_SQLITE_PATH") if OS.has_environment("GS_SQL_SQLITE_PATH") else OS.get_environment("DOT_SQL_SQLITE_PATH"))
+	var sqlite_path := (OS.get_environment("GS_SQL_SQLITE_PATH") if OS.has_environment("GS_SQL_SQLITE_PATH") else OS.get_environment("GS_SQL_SQLITE_PATH"))
 	if sqlite_path != "":
 		var direct := GSSql.from_config({"driver": "sqlite", "path": sqlite_path}, self)
 		driver = direct.value
-		print("dot-sql live: sqlite (extension)")
+		print("gs-sql live: sqlite (extension)")
 		await _run()
 		return
 
-	var url := (OS.get_environment("GS_SQL_URL") if OS.has_environment("GS_SQL_URL") else OS.get_environment("DOT_SQL_URL"))
-	var dialect := GSSqlDialect.from_name((OS.get_environment("GS_SQL_DIALECT") if OS.has_environment("GS_SQL_DIALECT") else OS.get_environment("DOT_SQL_DIALECT")))
-	var token_file := (OS.get_environment("GS_SQL_TOKEN_FILE") if OS.has_environment("GS_SQL_TOKEN_FILE") else OS.get_environment("DOT_SQL_TOKEN_FILE"))
+	var url := (OS.get_environment("GS_SQL_URL") if OS.has_environment("GS_SQL_URL") else OS.get_environment("GS_SQL_URL"))
+	var dialect := GSSqlDialect.from_name((OS.get_environment("GS_SQL_DIALECT") if OS.has_environment("GS_SQL_DIALECT") else OS.get_environment("GS_SQL_DIALECT")))
+	var token_file := (OS.get_environment("GS_SQL_TOKEN_FILE") if OS.has_environment("GS_SQL_TOKEN_FILE") else OS.get_environment("GS_SQL_TOKEN_FILE"))
 	if url == "" or dialect < 0 or token_file == "":
 		print("set GS_SQL_SQLITE_PATH, or GS_SQL_URL, GS_SQL_DIALECT and GS_SQL_TOKEN_FILE; see tools/test_live.sh")
 		get_tree().quit(2)
@@ -53,7 +53,7 @@ func _ready() -> void:
 	}, self)
 	driver = made.value
 
-	print("dot-sql live: %s" % GSSqlDialect.name_of(dialect))
+	print("gs-sql live: %s" % GSSqlDialect.name_of(dialect))
 	await _run()
 
 
@@ -74,12 +74,12 @@ func _test_open() -> void:
 	_check("the database answers", opened.ok, opened)
 
 	# Fresh tables every run; a previous failed run may have left them.
-	await driver.execute("DROP TABLE IF EXISTS dot_sql_live")
-	await driver.execute("DELETE FROM dot_sql_migrations WHERE component = ?", ["dot_sql_live"])
-	await driver.execute("DROP TABLE IF EXISTS dot_sql_live_m")
+	await driver.execute("DROP TABLE IF EXISTS gs_sql_live")
+	await driver.execute("DELETE FROM gs_sql_migrations WHERE component = ?", ["gs_sql_live"])
+	await driver.execute("DROP TABLE IF EXISTS gs_sql_live_m")
 
 	var made := await driver.ensure_table({
-		"name": "dot_sql_live",
+		"name": "gs_sql_live",
 		"columns": [
 			{"name": "id", "type": GSSqlDialect.KEY, "null": false},
 			{"name": "name", "type": GSSqlDialect.TEXT},
@@ -92,7 +92,7 @@ func _test_open() -> void:
 	})
 	_check("a table spec creates a table", made.ok, made)
 	var again := await driver.ensure_table({
-		"name": "dot_sql_live",
+		"name": "gs_sql_live",
 		"columns": [{"name": "id", "type": GSSqlDialect.KEY, "null": false}],
 		"primary_key": ["id"],
 	})
@@ -104,22 +104,22 @@ func _test_open() -> void:
 func _test_rows() -> void:
 	_section("rows")
 
-	var upsert := driver.upsert_sql("dot_sql_live", PackedStringArray(["id", "name", "time", "at", "ok"]), PackedStringArray(["id"]))
+	var upsert := driver.upsert_sql("gs_sql_live", PackedStringArray(["id", "name", "time", "at", "ok"]), PackedStringArray(["id"]))
 	var first := await driver.execute(upsert, ["p1", "Zoë 🏁 'quotes'", 12345.678, 1790000000, 1])
 	_check("an upsert inserts", first.ok, first)
 	var second := await driver.execute(upsert, ["p1", "Zoë", 61.25, 1790000001, 0])
 	_check("an upsert replaces", second.ok, second)
 
-	var row := await driver.query_one("SELECT * FROM dot_sql_live WHERE id = ?", ["p1"])
+	var row := await driver.query_one("SELECT * FROM gs_sql_live WHERE id = ?", ["p1"])
 	_check("the replaced row reads back", row.ok and row.value is Dictionary and is_equal_approx(float(row.value["time"]), 61.25), row)
 
 	await driver.execute(upsert, ["p2", "Zoë 🏁 'quotes'", 12345.678, 1790000002, 1])
-	var p2 := await driver.query_one("SELECT name, time, at FROM dot_sql_live WHERE id = ?", ["p2"])
+	var p2 := await driver.query_one("SELECT name, time, at FROM gs_sql_live WHERE id = ?", ["p2"])
 	_check("a name with an emoji and quotes survives", p2.ok and str(p2.value["name"]) == "Zoë 🏁 'quotes'", p2)
 	# Thousandths decide this genre; a REAL column in Postgres would round them away.
 	_check("a run time keeps its thousandths", p2.ok and absf(float(p2.value["time"]) - 12345.678) < 0.0005, p2)
 
-	var like := await driver.query_value("SELECT COUNT(*) AS n FROM dot_sql_live WHERE id LIKE 'p%' AND name <> 'who?'", [], 0)
+	var like := await driver.query_value("SELECT COUNT(*) AS n FROM gs_sql_live WHERE id LIKE 'p%' AND name <> 'who?'", [], 0)
 	_check("a literal % and ? are not placeholders", like.ok and int(like.value) == 2, like)
 
 	var refused := await driver.query("SELECT nonsense FROM nowhere")
@@ -132,17 +132,17 @@ func _test_batch() -> void:
 	_section("batch")
 
 	var ok := await driver.batch([
-		["UPDATE dot_sql_live SET at = ? WHERE id = ?", [1, "p1"]],
-		["UPDATE dot_sql_live SET at = ? WHERE id = ?", [2, "p2"]],
+		["UPDATE gs_sql_live SET at = ? WHERE id = ?", [1, "p1"]],
+		["UPDATE gs_sql_live SET at = ? WHERE id = ?", [2, "p2"]],
 	])
 	_check("a batch applies", ok.ok, ok)
 
 	var bad := await driver.batch([
-		["UPDATE dot_sql_live SET at = ? WHERE id = ?", [99, "p1"]],
-		["INSERT INTO dot_sql_live (id) VALUES (?)", ["p2"]],
+		["UPDATE gs_sql_live SET at = ? WHERE id = ?", [99, "p1"]],
+		["INSERT INTO gs_sql_live (id) VALUES (?)", ["p2"]],
 	])
 	_check("a batch with a failing statement fails", not bad.ok)
-	var at := await driver.query_value("SELECT at FROM dot_sql_live WHERE id = ?", ["p1"], -1)
+	var at := await driver.query_value("SELECT at FROM gs_sql_live WHERE id = ?", ["p1"], -1)
 	_check("and none of it applied", at.ok and int(at.value) == 1, at)
 
 	_done()
@@ -153,19 +153,19 @@ func _test_migrate() -> void:
 
 	var steps := [
 		[{
-			"name": "dot_sql_live_m",
+			"name": "gs_sql_live_m",
 			"columns": [{"name": "id", "type": GSSqlDialect.KEY, "null": false}],
 			"primary_key": ["id"],
 		}],
 		[func(d) -> GSResult:
-			return await d.execute(GSSqlSchema.add_column("dot_sql_live_m", {"name": "extra", "type": GSSqlDialect.INT, "null": false, "default": 7}, d.dialect()))],
+			return await d.execute(GSSqlSchema.add_column("gs_sql_live_m", {"name": "extra", "type": GSSqlDialect.INT, "null": false, "default": 7}, d.dialect()))],
 	]
-	var first := await driver.migrate("dot_sql_live", steps)
+	var first := await driver.migrate("gs_sql_live", steps)
 	_check("migrates to 2", first.ok and int(first.value) == 2, first)
-	var second := await driver.migrate("dot_sql_live", steps)
+	var second := await driver.migrate("gs_sql_live", steps)
 	_check("a second run is a no-op", second.ok and int(second.value) == 2, second)
-	await driver.execute("INSERT INTO dot_sql_live_m (id) VALUES (?)", ["a"])
-	var extra := await driver.query_value("SELECT extra FROM dot_sql_live_m WHERE id = ?", ["a"], 0)
+	await driver.execute("INSERT INTO gs_sql_live_m (id) VALUES (?)", ["a"])
+	var extra := await driver.query_value("SELECT extra FROM gs_sql_live_m WHERE id = ?", ["a"], 0)
 	_check("the added column has its default", extra.ok and int(extra.value) == 7, extra)
 
 	_done()

@@ -52,7 +52,7 @@ static func from_config(config: Dictionary, host: Node = null) -> GSResult:
 			if url.strip_edges() == "":
 				return GSResult.fail(
 					GSError.CODE_INVALID, "A SQL gateway needs a url.",
-					"Postgres and MySQL are reached through an HTTP gateway; see dot-sql's README"
+					"Postgres and MySQL are reached through an HTTP gateway; see gs-sql's README"
 				)
 			if not (url.begins_with("http://") or url.begins_with("https://")):
 				return GSResult.fail(GSError.CODE_INVALID, "The gateway url must be http(s).", url)
