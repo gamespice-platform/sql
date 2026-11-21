@@ -3,7 +3,7 @@
 #
 #   tools/fetch_sqlite.sh <project directory>
 #
-# DotSqlDriverSqlite reaches the extension by name and never ships it: a project that
+# GSSqlDriverSqlite reaches the extension by name and never ships it: a project that
 # keeps its records in SQLite runs this once (GameSpice Server Deploy's setup.sh does). The
 # release is PINNED, by version and by the archive's sha256, because this is a native
 # library loaded into a server that accepts connections from strangers, and "whatever

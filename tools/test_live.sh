@@ -55,7 +55,7 @@ run() {
 run sqlite "$work/live.db"
 
 # And SQLite through the extension itself, with no gateway in between, when the project
-# has it (tools/fetch_sqlite.sh). The only run that reaches DotSqlDriverSqlite's calls.
+# has it (tools/fetch_sqlite.sh). The only run that reaches GSSqlDriverSqlite's calls.
 if [ -f "$project/addons/godot-sqlite/gdsqlite.gdextension" ]; then
     echo "== sqlite (extension)"
     GS_SQL_SQLITE_PATH="$work/direct.db" timeout 120 "$godot" --headless --path "$project" "$scene" \

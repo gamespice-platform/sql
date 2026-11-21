@@ -14,27 +14,27 @@ GameSpice Core is the only dependency.
 
 | Piece | What it is |
 | --- | --- |
-| `DotSqlDriverSqlite` | SQLite through godot-sqlite. One server, one file. |
-| `DotSqlDriverGateway` | PostgreSQL, MySQL/MariaDB or SQLite through a small HTTP gateway running beside the database. Several servers, one database. |
+| `GSSqlDriverSqlite` | SQLite through godot-sqlite. One server, one file. |
+| `GSSqlDriverGateway` | PostgreSQL, MySQL/MariaDB or SQLite through a small HTTP gateway running beside the database. Several servers, one database. |
 | `tools/sql_gateway.py` | A reference gateway in Python. It handles one request at a time: fine for a few servers, meant to be copied rather than scaled. |
-| `DotSqlDialect` | Everywhere the databases differ: column types, upserts, placeholders, reserved words. |
-| `DotSqlSchema` | Tables described as data and turned into SQL for each database. |
-| `DotSqlMigrator` | Versioned schema changes, one counter per asset. |
-| `DotSql.from_config` | Builds a driver from a config dictionary, so a server picks its database in a file. |
+| `GSSqlDialect` | Everywhere the databases differ: column types, upserts, placeholders, reserved words. |
+| `GSSqlSchema` | Tables described as data and turned into SQL for each database. |
+| `GSSqlMigrator` | Versioned schema changes, one counter per asset. |
+| `GSSql.from_config` | Builds a driver from a config dictionary, so a server picks its database in a file. |
 
 ## Use
 
 ```gdscript
 # One SQLite file on this server:
-var made := DotSql.from_config({"driver": "sqlite", "path": "user://game.db"}, self)
+var made := GSSql.from_config({"driver": "sqlite", "path": "user://game.db"}, self)
 
 # A shared MySQL or PostgreSQL database through the gateway:
-var made := DotSql.from_config({
+var made := GSSql.from_config({
     "driver": "gateway", "dialect": "mysql",
     "url": "http://10.0.0.5:8780", "token": "from your config file",
 }, self)
 
-var store := DotTimerStoreSql.new(made.value)
+var store := GSTimerStoreSql.new(made.value)
 await store.open()          # creates or migrates its tables
 timers.store = store
 ```

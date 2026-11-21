@@ -1,6 +1,6 @@
 extends Node
 
-## Runs real SQL against a real database through [DotSqlDriverGateway].
+## Runs real SQL against a real database through [GSSqlDriverGateway].
 ##
 ## The offline suite proves which statements are built; only this proves a database
 ## accepts them. `tools/test_live.sh` starts `tools/sql_gateway.py` for SQLite, and for
@@ -12,7 +12,7 @@ extends Node
 ## [/codeblock]
 ##
 ## The token comes from a FILE named in the environment, never from the environment itself
-## — the same rule DotConfig enforces for a game.
+## — the same rule GSConfig enforces for a game.
 
 const CHECKS := 16
 const SECTIONS := 4
@@ -23,37 +23,37 @@ var _entered := 0
 var _completed := 0
 
 ## A gateway, or the real godot-sqlite extension when GS_SQL_SQLITE_PATH is set.
-var driver: DotSqlDriver = null
+var driver: GSSqlDriver = null
 
 
 func _ready() -> void:
-	DotLog.set_level(DotLog.Level.ERROR)
+	GSLog.set_level(GSLog.Level.ERROR)
 
-	# The extension itself, no gateway: the only run that reaches DotSqlDriverSqlite's
+	# The extension itself, no gateway: the only run that reaches GSSqlDriverSqlite's
 	# calls into godot-sqlite rather than the SQL they would send.
 	var sqlite_path := (OS.get_environment("GS_SQL_SQLITE_PATH") if OS.has_environment("GS_SQL_SQLITE_PATH") else OS.get_environment("DOT_SQL_SQLITE_PATH"))
 	if sqlite_path != "":
-		var direct := DotSql.from_config({"driver": "sqlite", "path": sqlite_path}, self)
+		var direct := GSSql.from_config({"driver": "sqlite", "path": sqlite_path}, self)
 		driver = direct.value
 		print("dot-sql live: sqlite (extension)")
 		await _run()
 		return
 
 	var url := (OS.get_environment("GS_SQL_URL") if OS.has_environment("GS_SQL_URL") else OS.get_environment("DOT_SQL_URL"))
-	var dialect := DotSqlDialect.from_name((OS.get_environment("GS_SQL_DIALECT") if OS.has_environment("GS_SQL_DIALECT") else OS.get_environment("DOT_SQL_DIALECT")))
+	var dialect := GSSqlDialect.from_name((OS.get_environment("GS_SQL_DIALECT") if OS.has_environment("GS_SQL_DIALECT") else OS.get_environment("DOT_SQL_DIALECT")))
 	var token_file := (OS.get_environment("GS_SQL_TOKEN_FILE") if OS.has_environment("GS_SQL_TOKEN_FILE") else OS.get_environment("DOT_SQL_TOKEN_FILE"))
 	if url == "" or dialect < 0 or token_file == "":
 		print("set GS_SQL_SQLITE_PATH, or GS_SQL_URL, GS_SQL_DIALECT and GS_SQL_TOKEN_FILE; see tools/test_live.sh")
 		get_tree().quit(2)
 		return
 
-	var made := DotSql.from_config({
-		"driver": "gateway", "url": url, "dialect": DotSqlDialect.name_of(dialect),
+	var made := GSSql.from_config({
+		"driver": "gateway", "url": url, "dialect": GSSqlDialect.name_of(dialect),
 		"token": FileAccess.get_file_as_string(token_file).strip_edges(),
 	}, self)
 	driver = made.value
 
-	print("dot-sql live: %s" % DotSqlDialect.name_of(dialect))
+	print("dot-sql live: %s" % GSSqlDialect.name_of(dialect))
 	await _run()
 
 
@@ -81,11 +81,11 @@ func _test_open() -> void:
 	var made := await driver.ensure_table({
 		"name": "dot_sql_live",
 		"columns": [
-			{"name": "id", "type": DotSqlDialect.KEY, "null": false},
-			{"name": "name", "type": DotSqlDialect.TEXT},
-			{"name": "time", "type": DotSqlDialect.REAL, "null": false, "default": 0},
-			{"name": "at", "type": DotSqlDialect.BIGINT, "null": false, "default": 0},
-			{"name": "ok", "type": DotSqlDialect.BOOL, "null": false, "default": false},
+			{"name": "id", "type": GSSqlDialect.KEY, "null": false},
+			{"name": "name", "type": GSSqlDialect.TEXT},
+			{"name": "time", "type": GSSqlDialect.REAL, "null": false, "default": 0},
+			{"name": "at", "type": GSSqlDialect.BIGINT, "null": false, "default": 0},
+			{"name": "ok", "type": GSSqlDialect.BOOL, "null": false, "default": false},
 		],
 		"primary_key": ["id"],
 		"indexes": [{"name": "time", "columns": ["time"]}],
@@ -93,7 +93,7 @@ func _test_open() -> void:
 	_check("a table spec creates a table", made.ok, made)
 	var again := await driver.ensure_table({
 		"name": "dot_sql_live",
-		"columns": [{"name": "id", "type": DotSqlDialect.KEY, "null": false}],
+		"columns": [{"name": "id", "type": GSSqlDialect.KEY, "null": false}],
 		"primary_key": ["id"],
 	})
 	_check("creating it twice is harmless", again.ok, again)
@@ -154,11 +154,11 @@ func _test_migrate() -> void:
 	var steps := [
 		[{
 			"name": "dot_sql_live_m",
-			"columns": [{"name": "id", "type": DotSqlDialect.KEY, "null": false}],
+			"columns": [{"name": "id", "type": GSSqlDialect.KEY, "null": false}],
 			"primary_key": ["id"],
 		}],
-		[func(d) -> DotResult:
-			return await d.execute(DotSqlSchema.add_column("dot_sql_live_m", {"name": "extra", "type": DotSqlDialect.INT, "null": false, "default": 7}, d.dialect()))],
+		[func(d) -> GSResult:
+			return await d.execute(GSSqlSchema.add_column("dot_sql_live_m", {"name": "extra", "type": GSSqlDialect.INT, "null": false, "default": 7}, d.dialect()))],
 	]
 	var first := await driver.migrate("dot_sql_live", steps)
 	_check("migrates to 2", first.ok and int(first.value) == 2, first)
@@ -180,7 +180,7 @@ func _done() -> void:
 	_completed += 1
 
 
-func _check(what: String, passed: bool, res: DotResult = null) -> void:
+func _check(what: String, passed: bool, res: GSResult = null) -> void:
 	if passed:
 		_passed += 1
 		print("  %-56s ok" % what)

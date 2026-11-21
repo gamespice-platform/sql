@@ -1,23 +1,23 @@
 @tool
-class_name DotSqlDriverSqlite
-extends DotSqlDriver
+class_name GSSqlDriverSqlite
+extends GSSqlDriver
 
 ## SQLite, through the `godot-sqlite` GDExtension (github.com/2shady4u/godot-sqlite).
 ##
 ## [b]The extension is reached by name and never by identifier.[/b] `ClassDB.instantiate`
-## plus `Object.call`, as `DotTransportENet` reaches ENet and for the same reason: a script
+## plus `Object.call`, as `GSTransportENet` reaches ENet and for the same reason: a script
 ## that merely mentions a class the project does not have fails to compile, and takes
 ## every script that references it down too. So this file compiles with no extension
 ## installed and says so when asked.
 ##
 ## [codeblock]
-## var driver := DotSqlDriverSqlite.new("user://records.db")
+## var driver := GSSqlDriverSqlite.new("user://records.db")
 ## var opened := await driver.open()
 ## [/codeblock]
 ##
 ## [b]One process, one file.[/b] SQLite is the right answer for one server keeping its own
 ## records and the wrong one for five servers sharing them; that is
-## [DotSqlDriverGateway]'s job. WAL mode lets a web panel read while the server writes.
+## [GSSqlDriverGateway]'s job. WAL mode lets a web panel read while the server writes.
 ##
 ## [b]What the suite covers.[/b] `tools/fetch_sqlite.sh` installs a pinned godot-sqlite
 ## release, and with it present `tools/test_live.sh` runs the live suite through this driver
@@ -40,32 +40,32 @@ func _init(p_path: String = "user://dot.db") -> void:
 
 
 func dialect() -> int:
-	return DotSqlDialect.Kind.SQLITE
+	return GSSqlDialect.Kind.SQLITE
 
 
 func driver_name() -> String:
 	return "sqlite"
 
 
-func is_available() -> DotResult:
+func is_available() -> GSResult:
 	if not ClassDB.class_exists(EXTENSION_CLASS):
-		return DotResult.fail(
-			DotError.CODE_UNSUPPORTED,
+		return GSResult.fail(
+			GSError.CODE_UNSUPPORTED,
 			"The SQLite GDExtension is not installed.",
 			"run dot-sql's tools/fetch_sqlite.sh <project> and then --import it (Godot loads only the extensions .godot/extension_list.cfg names, and only an import writes that), or point the store at a SQL gateway"
 		)
 	if not ClassDB.can_instantiate(EXTENSION_CLASS):
-		return DotResult.fail(
-			DotError.CODE_UNSUPPORTED,
+		return GSResult.fail(
+			GSError.CODE_UNSUPPORTED,
 			"The SQLite class exists but cannot be instantiated on this platform.",
 			"a GDExtension ships a binary per platform, and the web is usually the one it does not"
 		)
-	return DotResult.success(true)
+	return GSResult.success(true)
 
 
-func open() -> DotResult:
+func open() -> GSResult:
 	if _db != null:
-		return DotResult.success(true)
+		return GSResult.success(true)
 
 	var available := is_available()
 	if not available.ok:
@@ -80,11 +80,11 @@ func open() -> DotResult:
 		if dir != "" and not DirAccess.dir_exists_absolute(dir):
 			var made := DirAccess.make_dir_recursive_absolute(dir)
 			if made != OK:
-				return DotResult.fail(DotError.CODE_IO, "Could not create the database's directory.", "%s: %s" % [dir, error_string(made)])
+				return GSResult.fail(GSError.CODE_IO, "Could not create the database's directory.", "%s: %s" % [dir, error_string(made)])
 
 	_db = ClassDB.instantiate(EXTENSION_CLASS)
 	if _db == null:
-		return DotResult.fail(DotError.CODE_INTERNAL, "The SQLite extension would not instantiate.")
+		return GSResult.fail(GSError.CODE_INTERNAL, "The SQLite extension would not instantiate.")
 
 	# The extension resolves `user://` itself and wants the Godot path, not an OS one.
 	_db.set("path", path)
@@ -93,7 +93,7 @@ func open() -> DotResult:
 	if not bool(_db.call("open_db")):
 		var why := str(_db.get("error_message"))
 		_db = null
-		return DotResult.fail(DotError.CODE_IO, "Could not open the SQLite database.", "%s: %s" % [path, why])
+		return GSResult.fail(GSError.CODE_IO, "Could not open the SQLite database.", "%s: %s" % [path, why])
 
 	_db.call("query", "PRAGMA journal_mode=WAL")
 	# Without this SQLite does not enforce foreign keys, which makes them decoration.
@@ -101,8 +101,8 @@ func open() -> DotResult:
 	# A second process holding the write lock is a wait, not an immediate SQLITE_BUSY.
 	_db.call("query", "PRAGMA busy_timeout=2000")
 
-	DotLog.info(CHANNEL, "sqlite open", {"path": path})
-	return DotResult.success(true)
+	GSLog.info(CHANNEL, "sqlite open", {"path": path})
+	return GSResult.success(true)
 
 
 func close() -> void:
@@ -120,11 +120,11 @@ func supports_transactions() -> bool:
 	return true
 
 
-func _execute(sql: String, params: Array) -> DotResult:
+func _execute(sql: String, params: Array) -> GSResult:
 	if _db == null:
-		return DotResult.fail(DotError.CODE_STATE, "The database is not open.")
+		return GSResult.fail(GSError.CODE_STATE, "The database is not open.")
 	if not bool(_db.call("query_with_bindings", sql, params)):
-		return DotResult.fail(DotError.CODE_IO, "A statement failed.", str(_db.get("error_message")))
+		return GSResult.fail(GSError.CODE_IO, "A statement failed.", str(_db.get("error_message")))
 	# The rows the statement changed, as the gateway reports them: the contract callers
 	# rely on (GameSpice Stats' revision guard, a store's "was there anything to remove").
 	# `true` here read as success to every one of them, so a lost race on a shared
@@ -132,24 +132,24 @@ func _execute(sql: String, params: Array) -> DotResult:
 	_db.call("query", "SELECT changes() AS n")
 	var counted: Variant = _db.get("query_result")
 	if counted is Array and not (counted as Array).is_empty() and (counted as Array)[0] is Dictionary:
-		return DotResult.success(int(((counted as Array)[0] as Dictionary).get("n", 0)))
-	return DotResult.success(0)
+		return GSResult.success(int(((counted as Array)[0] as Dictionary).get("n", 0)))
+	return GSResult.success(0)
 
 
-func _query(sql: String, params: Array) -> DotResult:
+func _query(sql: String, params: Array) -> GSResult:
 	if _db == null:
-		return DotResult.fail(DotError.CODE_STATE, "The database is not open.")
+		return GSResult.fail(GSError.CODE_STATE, "The database is not open.")
 	if not bool(_db.call("query_with_bindings", sql, params)):
-		return DotResult.fail(DotError.CODE_IO, "A query failed.", str(_db.get("error_message")))
+		return GSResult.fail(GSError.CODE_IO, "A query failed.", str(_db.get("error_message")))
 	var rows: Variant = _db.get("query_result")
 	# The extension reuses its result array between queries; a caller holding the last
 	# answer would see it change under them.
-	return DotResult.success((rows as Array).duplicate(true) if rows is Array else [])
+	return GSResult.success((rows as Array).duplicate(true) if rows is Array else [])
 
 
-func batch(statements: Array) -> DotResult:
+func batch(statements: Array) -> GSResult:
 	if _db == null:
-		return DotResult.fail(DotError.CODE_STATE, "The database is not open.")
+		return GSResult.fail(GSError.CODE_STATE, "The database is not open.")
 
 	_db.call("query", "BEGIN")
 	var done := 0
@@ -157,13 +157,13 @@ func batch(statements: Array) -> DotResult:
 		var pair := _pair(entry)
 		if pair.is_empty():
 			continue
-		var result: DotResult = await execute(pair[0], pair[1])
+		var result: GSResult = await execute(pair[0], pair[1])
 		if not result.ok:
 			_db.call("query", "ROLLBACK")
 			return result.wrap("Statement %d of %d failed; rolled back." % [done + 1, statements.size()])
 		done += 1
 	_db.call("query", "COMMIT")
-	return DotResult.success(done)
+	return GSResult.success(done)
 
 
 func describe() -> Dictionary:

@@ -1,5 +1,5 @@
 @tool
-class_name DotSqlDialect
+class_name GSSqlDialect
 extends RefCounted
 
 ## The three SQLs this family speaks, and every place they differ.

@@ -1,12 +1,12 @@
 @tool
-class_name DotSqlSchema
+class_name GSSqlSchema
 extends RefCounted
 
 ## Tables as plain data, rendered to DDL per dialect.
 ##
 ## [b]A table is a [Dictionary], not an object of this class[/b], because the stores that
-## declare tables live in addons that must not name GameSpice SQL (see [DotSqlDialect]). A store
-## builds the dictionary and hands it to [method DotSqlDriver.ensure_table]; the driver,
+## declare tables live in addons that must not name GameSpice SQL (see [GSSqlDialect]). A store
+## builds the dictionary and hands it to [method GSSqlDriver.ensure_table]; the driver,
 ## which IS GameSpice SQL, renders it. So the DDL for three dialects is written once, here,
 ## rather than once per addon — and the next store does not get to forget that MySQL
 ## cannot index TEXT.
@@ -35,53 +35,53 @@ extends RefCounted
 
 ## Checks a table spec. Every identifier in it will be spliced into SQL, so every one is
 ## checked here rather than trusted.
-static func validate(spec: Dictionary) -> DotResult:
+static func validate(spec: Dictionary) -> GSResult:
 	var name := str(spec.get("name", ""))
-	if not DotSqlDialect.is_safe_identifier(name):
-		return DotResult.fail(DotError.CODE_INVALID, "Unsafe table name.", name)
+	if not GSSqlDialect.is_safe_identifier(name):
+		return GSResult.fail(GSError.CODE_INVALID, "Unsafe table name.", name)
 
 	var columns: Variant = spec.get("columns", [])
 	if not (columns is Array) or (columns as Array).is_empty():
-		return DotResult.fail(DotError.CODE_INVALID, "A table needs columns.", name)
+		return GSResult.fail(GSError.CODE_INVALID, "A table needs columns.", name)
 
 	var seen := {}
 	for column in columns:
 		if not (column is Dictionary):
-			return DotResult.fail(DotError.CODE_INVALID, "A column must be a dictionary.", name)
+			return GSResult.fail(GSError.CODE_INVALID, "A column must be a dictionary.", name)
 		var cname := str((column as Dictionary).get("name", ""))
-		if not DotSqlDialect.is_safe_identifier(cname):
-			return DotResult.fail(DotError.CODE_INVALID, "Unsafe column name.", "%s.%s" % [name, cname])
+		if not GSSqlDialect.is_safe_identifier(cname):
+			return GSResult.fail(GSError.CODE_INVALID, "Unsafe column name.", "%s.%s" % [name, cname])
 		if seen.has(cname):
-			return DotResult.fail(DotError.CODE_INVALID, "A column is declared twice.", "%s.%s" % [name, cname])
-		var ctype := str((column as Dictionary).get("type", DotSqlDialect.TEXT))
-		if not DotSqlDialect.TYPES.has(ctype):
-			return DotResult.fail(DotError.CODE_INVALID, "Unknown column type.", "%s.%s: %s" % [name, cname, ctype])
+			return GSResult.fail(GSError.CODE_INVALID, "A column is declared twice.", "%s.%s" % [name, cname])
+		var ctype := str((column as Dictionary).get("type", GSSqlDialect.TEXT))
+		if not GSSqlDialect.TYPES.has(ctype):
+			return GSResult.fail(GSError.CODE_INVALID, "Unknown column type.", "%s.%s: %s" % [name, cname, ctype])
 		seen[cname] = ctype
 
 	for key in _names(spec.get("primary_key", [])):
 		if not seen.has(key):
-			return DotResult.fail(DotError.CODE_INVALID, "The primary key names a missing column.", "%s.%s" % [name, key])
+			return GSResult.fail(GSError.CODE_INVALID, "The primary key names a missing column.", "%s.%s" % [name, key])
 		# MySQL cannot key on TEXT, and a primary key on an unbounded string is a mistake
 		# in the other two as well.
-		if seen[key] == DotSqlDialect.TEXT or seen[key] == DotSqlDialect.JSON_TEXT:
-			return DotResult.fail(DotError.CODE_INVALID, "A key column must be `key`, not `text`.", "%s.%s" % [name, key])
+		if seen[key] == GSSqlDialect.TEXT or seen[key] == GSSqlDialect.JSON_TEXT:
+			return GSResult.fail(GSError.CODE_INVALID, "A key column must be `key`, not `text`.", "%s.%s" % [name, key])
 
 	for index in spec.get("indexes", []):
 		if not (index is Dictionary):
-			return DotResult.fail(DotError.CODE_INVALID, "An index must be a dictionary.", name)
+			return GSResult.fail(GSError.CODE_INVALID, "An index must be a dictionary.", name)
 		var iname := str((index as Dictionary).get("name", ""))
-		if not DotSqlDialect.is_safe_identifier("%s_%s" % [name, iname]):
-			return DotResult.fail(DotError.CODE_INVALID, "Unsafe index name.", iname)
+		if not GSSqlDialect.is_safe_identifier("%s_%s" % [name, iname]):
+			return GSResult.fail(GSError.CODE_INVALID, "Unsafe index name.", iname)
 		var icolumns := _names((index as Dictionary).get("columns", []))
 		if icolumns.is_empty():
-			return DotResult.fail(DotError.CODE_INVALID, "An index needs columns.", iname)
+			return GSResult.fail(GSError.CODE_INVALID, "An index needs columns.", iname)
 		for icolumn in icolumns:
 			if not seen.has(icolumn):
-				return DotResult.fail(DotError.CODE_INVALID, "An index names a missing column.", "%s: %s" % [iname, icolumn])
-			if seen[icolumn] == DotSqlDialect.TEXT or seen[icolumn] == DotSqlDialect.JSON_TEXT:
-				return DotResult.fail(DotError.CODE_INVALID, "An indexed column must be `key`, not `text`.", "%s: %s" % [iname, icolumn])
+				return GSResult.fail(GSError.CODE_INVALID, "An index names a missing column.", "%s: %s" % [iname, icolumn])
+			if seen[icolumn] == GSSqlDialect.TEXT or seen[icolumn] == GSSqlDialect.JSON_TEXT:
+				return GSResult.fail(GSError.CODE_INVALID, "An indexed column must be `key`, not `text`.", "%s: %s" % [iname, icolumn])
 
-	return DotResult.success(true)
+	return GSResult.success(true)
 
 
 ## Every statement that creates [param spec] in [param dialect], in order.
@@ -99,7 +99,7 @@ static func ddl(spec: Dictionary, dialect: int) -> PackedStringArray:
 
 	var indexes: Array = spec.get("indexes", [])
 
-	if dialect == DotSqlDialect.Kind.MYSQL:
+	if dialect == GSSqlDialect.Kind.MYSQL:
 		for index in indexes:
 			lines.append("  %sKEY %s_%s (%s)" % [
 				"UNIQUE " if bool(index.get("unique", false)) else "",
@@ -107,14 +107,14 @@ static func ddl(spec: Dictionary, dialect: int) -> PackedStringArray:
 			])
 
 	var tail := ""
-	if dialect == DotSqlDialect.Kind.MYSQL:
+	if dialect == GSSqlDialect.Kind.MYSQL:
 		# utf8mb4, or a player name with an emoji in it fails the insert. The server
 		# default is still latin1 on more installations than anybody would guess.
 		tail = " DEFAULT CHARSET=utf8mb4"
 
 	out.append("CREATE TABLE IF NOT EXISTS %s (\n%s\n)%s" % [table, ",\n".join(lines), tail])
 
-	if dialect != DotSqlDialect.Kind.MYSQL:
+	if dialect != GSSqlDialect.Kind.MYSQL:
 		for index in indexes:
 			out.append("CREATE %sINDEX IF NOT EXISTS %s_%s ON %s (%s)" % [
 				"UNIQUE " if bool(index.get("unique", false)) else "",
@@ -128,7 +128,7 @@ static func ddl(spec: Dictionary, dialect: int) -> PackedStringArray:
 static func column_sql(column: Dictionary, dialect: int) -> String:
 	var line := "%s %s" % [
 		str(column["name"]),
-		DotSqlDialect.column_type(str(column.get("type", DotSqlDialect.TEXT)), dialect),
+		GSSqlDialect.column_type(str(column.get("type", GSSqlDialect.TEXT)), dialect),
 	]
 	if not bool(column.get("null", true)):
 		line += " NOT NULL"
@@ -140,7 +140,7 @@ static func column_sql(column: Dictionary, dialect: int) -> String:
 ## An ALTER that adds [param column] to [param table]. For a migration step.
 ##
 ## No IF NOT EXISTS — MySQL and older SQLite have none — so a migration that adds a column
-## must run exactly once, which is what [DotSqlMigrator] is for.
+## must run exactly once, which is what [GSSqlMigrator] is for.
 static func add_column(table: String, column: Dictionary, dialect: int) -> String:
 	return "ALTER TABLE %s ADD COLUMN %s" % [table, column_sql(column, dialect)]
 

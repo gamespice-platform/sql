@@ -1,6 +1,6 @@
 @tool
-class_name DotSqlDriverRecording
-extends DotSqlDriver
+class_name GSSqlDriverRecording
+extends GSSqlDriver
 
 ## Writes nothing and remembers everything it was asked to do.
 ##
@@ -24,11 +24,11 @@ var answers: Dictionary = {}
 ## Makes the next call fail with this message, for testing what a store does about it.
 var fail_next: String = ""
 
-var sql_dialect: int = DotSqlDialect.Kind.SQLITE
+var sql_dialect: int = GSSqlDialect.Kind.SQLITE
 var _open: bool = false
 
 
-func _init(p_dialect: int = DotSqlDialect.Kind.SQLITE) -> void:
+func _init(p_dialect: int = GSSqlDialect.Kind.SQLITE) -> void:
 	sql_dialect = p_dialect
 
 
@@ -40,13 +40,13 @@ func driver_name() -> String:
 	return "recording"
 
 
-func is_available() -> DotResult:
-	return DotResult.success(true)
+func is_available() -> GSResult:
+	return GSResult.success(true)
 
 
-func open() -> DotResult:
+func open() -> GSResult:
 	_open = true
-	return DotResult.success(true)
+	return GSResult.success(true)
 
 
 func close() -> void:
@@ -61,25 +61,25 @@ func supports_transactions() -> bool:
 	return true
 
 
-func _execute(sql: String, params: Array) -> DotResult:
+func _execute(sql: String, params: Array) -> GSResult:
 	statements.append({"sql": sql, "params": params.duplicate()})
 	if fail_next != "":
 		var why := fail_next
 		fail_next = ""
-		return DotResult.fail(DotError.CODE_IO, why)
-	return DotResult.success(1)
+		return GSResult.fail(GSError.CODE_IO, why)
+	return GSResult.success(1)
 
 
-func _query(sql: String, params: Array) -> DotResult:
+func _query(sql: String, params: Array) -> GSResult:
 	statements.append({"sql": sql, "params": params.duplicate()})
 	if fail_next != "":
 		var why := fail_next
 		fail_next = ""
-		return DotResult.fail(DotError.CODE_IO, why)
+		return GSResult.fail(GSError.CODE_IO, why)
 	for needle in answers:
 		if sql.contains(str(needle)):
-			return DotResult.success((answers[needle] as Array).duplicate(true))
-	return DotResult.success(rows.duplicate(true))
+			return GSResult.success((answers[needle] as Array).duplicate(true))
+	return GSResult.success(rows.duplicate(true))
 
 
 ## Statements whose SQL contains [param needle], for an assertion.

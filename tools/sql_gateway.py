@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A reference SQL gateway for dot-sql's DotSqlDriverGateway.
+"""A reference SQL gateway for dot-sql's GSSqlDriverGateway.
 
 Godot cannot speak the Postgres or MySQL wire protocols, so a game server reaches those
 databases through a small HTTP service that holds the credentials instead. This is one,

@@ -1,5 +1,5 @@
 @tool
-class_name DotSqlMigrator
+class_name GSSqlMigrator
 extends RefCounted
 
 ## Versioned schema changes, one counter per component, in one shared table.
@@ -19,8 +19,8 @@ extends RefCounted
 ## [/codeblock]
 ##
 ## A step is an [Array] whose entries are a SQL [String], [code][sql, params][/code], a
-## table spec [Dictionary] (see [DotSqlSchema]), or a [Callable] taking the driver and
-## returning a [DotResult] — for the step that has to say something different per dialect.
+## table spec [Dictionary] (see [GSSqlSchema]), or a [Callable] taking the driver and
+## returning a [GSResult] — for the step that has to say something different per dialect.
 ##
 ## [b]A database newer than the code is refused[/b], not read. A build that does not know
 ## what version three added would read rows it half understands and write rows missing
@@ -47,32 +47,32 @@ static func table_spec() -> Dictionary:
 	return {
 		"name": TABLE,
 		"columns": [
-			{"name": "component", "type": DotSqlDialect.KEY, "null": false},
-			{"name": "version", "type": DotSqlDialect.INT, "null": false, "default": 0},
-			{"name": "applied_at", "type": DotSqlDialect.BIGINT, "null": false, "default": 0},
+			{"name": "component", "type": GSSqlDialect.KEY, "null": false},
+			{"name": "version", "type": GSSqlDialect.INT, "null": false, "default": 0},
+			{"name": "applied_at", "type": GSSqlDialect.BIGINT, "null": false, "default": 0},
 		],
 		"primary_key": ["component"],
 	}
 
 
 ## The version recorded for [param component]; 0 when it has never migrated.
-func version_of(component: String) -> DotResult:
-	var made: DotResult = await driver.ensure_table(table_spec())
+func version_of(component: String) -> GSResult:
+	var made: GSResult = await driver.ensure_table(table_spec())
 	if not made.ok:
 		return made
-	var got: DotResult = await driver.query_value(
+	var got: GSResult = await driver.query_value(
 		"SELECT version FROM %s WHERE component = ?" % TABLE, [component], 0
 	)
 	if not got.ok:
 		return got
-	return DotResult.success(int(got.value))
+	return GSResult.success(int(got.value))
 
 
-func migrate(component: String, steps: Array) -> DotResult:
+func migrate(component: String, steps: Array) -> GSResult:
 	if driver == null:
-		return DotResult.fail(DotError.CODE_STATE, "A migrator needs a driver.")
+		return GSResult.fail(GSError.CODE_STATE, "A migrator needs a driver.")
 	if component.strip_edges() == "":
-		return DotResult.fail(DotError.CODE_INVALID, "A migration needs a component name.")
+		return GSResult.fail(GSError.CODE_INVALID, "A migration needs a component name.")
 
 	var current_result := await version_of(component)
 	if not current_result.ok:
@@ -82,8 +82,8 @@ func migrate(component: String, steps: Array) -> DotResult:
 	var target := steps.size()
 
 	if current > target:
-		return DotResult.fail(
-			DotError.CODE_VERSION,
+		return GSResult.fail(
+			GSError.CODE_VERSION,
 			"The database was written by a newer build.",
 			"%s is at schema %d and this build knows %d; upgrade the server, or restore a backup" % [
 				component, current, target
@@ -104,7 +104,7 @@ func migrate(component: String, steps: Array) -> DotResult:
 
 		current += 1
 
-		var recorded: DotResult = await driver.execute(
+		var recorded: GSResult = await driver.execute(
 			driver.upsert_sql(TABLE, PackedStringArray(["component", "version", "applied_at"]),
 				PackedStringArray(["component"])),
 			[component, current, int(Time.get_unix_time_from_system())]
@@ -112,16 +112,16 @@ func migrate(component: String, steps: Array) -> DotResult:
 		if not recorded.ok:
 			return recorded.wrap("Could not record %s at %d." % [component, current])
 
-		DotLog.info(CHANNEL, "schema migrated", {"component": component, "version": current})
+		GSLog.info(CHANNEL, "schema migrated", {"component": component, "version": current})
 
-	return DotResult.success(current)
+	return GSResult.success(current)
 
 
-func _apply(step: Variant) -> DotResult:
+func _apply(step: Variant) -> GSResult:
 	var entries: Array = step if step is Array else [step]
 
 	for entry in entries:
-		var result: DotResult
+		var result: GSResult
 		if entry is Dictionary:
 			result = await driver.ensure_table(entry)
 		elif entry is Callable:
@@ -132,11 +132,11 @@ func _apply(step: Variant) -> DotResult:
 			var params: Array = entry[1] if (entry as Array).size() > 1 and entry[1] is Array else []
 			result = await driver.execute(str(entry[0]), params)
 		else:
-			return DotResult.fail(DotError.CODE_INVALID, "A migration step has an entry it cannot run.")
+			return GSResult.fail(GSError.CODE_INVALID, "A migration step has an entry it cannot run.")
 
 		if result == null or not result.ok:
-			return result if result != null else DotResult.fail(
-				DotError.CODE_INTERNAL, "A migration callable returned nothing."
+			return result if result != null else GSResult.fail(
+				GSError.CODE_INTERNAL, "A migration callable returned nothing."
 			)
 
-	return DotResult.success(true)
+	return GSResult.success(true)

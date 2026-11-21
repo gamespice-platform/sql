@@ -1,6 +1,6 @@
 @tool
-class_name DotSqlDriverGateway
-extends DotSqlDriver
+class_name GSSqlDriverGateway
+extends GSSqlDriver
 
 ## PostgreSQL, MySQL or SQLite, through a small HTTP service beside the database.
 ##
@@ -21,7 +21,7 @@ extends DotSqlDriver
 ##   -> 401                       wrong or missing token
 ##
 ## [b]A refused statement is a 200 carrying [code]error[/code][/b], not a 4xx, because
-## [DotHttp] retries every non-2xx answer and a statement that failed once fails the same
+## [GSHttp] retries every non-2xx answer and a statement that failed once fails the same
 ## way twice more, a second and a half later, holding up whatever was waiting on it.
 ## [/codeblock]
 ##
@@ -37,15 +37,15 @@ var base_url: String = ""
 ## Sent as `Authorization: Bearer <token>`. Never logged; see [method describe].
 var token: String = ""
 
-var sql_dialect: int = DotSqlDialect.Kind.POSTGRES
+var sql_dialect: int = GSSqlDialect.Kind.POSTGRES
 
-## A [DotHttp] in the scene tree. [HTTPRequest] is a Node, so this driver cannot make its own.
-var http: DotHttp = null
+## A [GSHttp] in the scene tree. [HTTPRequest] is a Node, so this driver cannot make its own.
+var http: GSHttp = null
 
 var _open: bool = false
 
 
-func _init(p_base_url: String = "", p_dialect: int = DotSqlDialect.Kind.POSTGRES) -> void:
+func _init(p_base_url: String = "", p_dialect: int = GSSqlDialect.Kind.POSTGRES) -> void:
 	base_url = p_base_url
 	sql_dialect = p_dialect
 
@@ -55,42 +55,42 @@ func dialect() -> int:
 
 
 func driver_name() -> String:
-	return "gateway/%s" % DotSqlDialect.name_of(sql_dialect)
+	return "gateway/%s" % GSSqlDialect.name_of(sql_dialect)
 
 
-func is_available() -> DotResult:
+func is_available() -> GSResult:
 	if base_url.strip_edges() == "":
-		return DotResult.fail(DotError.CODE_INVALID, "A SQL gateway driver needs a base_url.")
-	if DotSqlDialect.name_of(sql_dialect) == "unknown":
-		return DotResult.fail(DotError.CODE_INVALID, "Unknown SQL dialect.", str(sql_dialect))
-	return DotResult.success(true)
+		return GSResult.fail(GSError.CODE_INVALID, "A SQL gateway driver needs a base_url.")
+	if GSSqlDialect.name_of(sql_dialect) == "unknown":
+		return GSResult.fail(GSError.CODE_INVALID, "Unknown SQL dialect.", str(sql_dialect))
+	return GSResult.success(true)
 
 
 ## Checks the gateway answers, so a wrong URL or token is found at boot and not on the
 ## first record somebody sets.
-func open() -> DotResult:
+func open() -> GSResult:
 	var available := is_available()
 	if not available.ok:
 		return available
 	if http == null:
-		return DotResult.fail(
-			DotError.CODE_STATE, "A SQL gateway driver needs a DotHttp.",
-			"add a DotHttp to the scene tree and assign it to .http"
+		return GSResult.fail(
+			GSError.CODE_STATE, "A SQL gateway driver needs a GSHttp.",
+			"add a GSHttp to the scene tree and assign it to .http"
 		)
 	if http.max_retries > 0:
-		# DotHttp retries a timeout, and a write that timed out may already have committed:
+		# GSHttp retries a timeout, and a write that timed out may already have committed:
 		# retried, `points = points + 3` adds six. Statements are not idempotent in general,
-		# so the gateway's DotHttp should be its own, with retries off.
-		DotLog.warn(CHANNEL, "the SQL gateway's DotHttp retries; a retried write can apply twice", {
-			"max_retries": http.max_retries, "fix": "give the driver its own DotHttp with max_retries = 0",
+		# so the gateway's GSHttp should be its own, with retries off.
+		GSLog.warn(CHANNEL, "the SQL gateway's GSHttp retries; a retried write can apply twice", {
+			"max_retries": http.max_retries, "fix": "give the driver its own GSHttp with max_retries = 0",
 		})
 	_open = true
 	var probe := await _post("/query", {"sql": "SELECT 1 AS ok", "params": []})
 	if not probe.ok:
 		_open = false
 		return probe.wrap("The SQL gateway at %s did not answer." % base_url)
-	DotLog.info(CHANNEL, "sql gateway open", {"url": base_url, "dialect": DotSqlDialect.name_of(sql_dialect)})
-	return DotResult.success(true)
+	GSLog.info(CHANNEL, "sql gateway open", {"url": base_url, "dialect": GSSqlDialect.name_of(sql_dialect)})
+	return GSResult.success(true)
 
 
 func close() -> void:
@@ -105,42 +105,42 @@ func supports_transactions() -> bool:
 	return true
 
 
-func _execute(sql: String, params: Array) -> DotResult:
+func _execute(sql: String, params: Array) -> GSResult:
 	var result := await _post("/query", {"sql": sql, "params": params})
 	if not result.ok:
 		return result
-	return DotResult.success(int((result.value as Dictionary).get("affected", 0)))
+	return GSResult.success(int((result.value as Dictionary).get("affected", 0)))
 
 
-func _query(sql: String, params: Array) -> DotResult:
+func _query(sql: String, params: Array) -> GSResult:
 	var result := await _post("/query", {"sql": sql, "params": params})
 	if not result.ok:
 		return result
 	var rows: Variant = (result.value as Dictionary).get("rows", [])
-	return DotResult.success(rows if rows is Array else [])
+	return GSResult.success(rows if rows is Array else [])
 
 
-func batch(statements: Array) -> DotResult:
+func batch(statements: Array) -> GSResult:
 	var list: Array = []
 	for entry in statements:
 		var pair := _pair(entry)
 		if not pair.is_empty():
 			list.append({"sql": pair[0], "params": pair[1]})
 	if list.is_empty():
-		return DotResult.success(0)
+		return GSResult.success(0)
 	var started := Time.get_ticks_msec()
 	var result := await _post("/batch", {"statements": list})
 	_timed("batch of %d" % list.size(), started, result)
 	if not result.ok:
 		return result
-	return DotResult.success(int((result.value as Dictionary).get("done", list.size())))
+	return GSResult.success(int((result.value as Dictionary).get("done", list.size())))
 
 
-func _post(route: String, body: Dictionary) -> DotResult:
+func _post(route: String, body: Dictionary) -> GSResult:
 	if not _open or http == null:
-		return DotResult.fail(DotError.CODE_STATE, "The gateway is not open.")
+		return GSResult.fail(GSError.CODE_STATE, "The gateway is not open.")
 
-	body["dialect"] = DotSqlDialect.name_of(sql_dialect)
+	body["dialect"] = GSSqlDialect.name_of(sql_dialect)
 	var headers := {}
 	if token != "":
 		headers["Authorization"] = "Bearer %s" % token
@@ -159,8 +159,8 @@ func _post(route: String, body: Dictionary) -> DotResult:
 	var response := raw
 	if raw.ok:
 		var parsed_body: Variant = JSON.parse_string(str((raw.value as Dictionary).get("body_text", "")))
-		response = DotResult.success(parsed_body) if parsed_body != null else DotResult.fail(
-			DotError.CODE_PARSE, "The SQL gateway's answer is not JSON."
+		response = GSResult.success(parsed_body) if parsed_body != null else GSResult.fail(
+			GSError.CODE_PARSE, "The SQL gateway's answer is not JSON."
 		)
 
 	if not response.ok:
@@ -169,17 +169,17 @@ func _post(route: String, body: Dictionary) -> DotResult:
 		var detail := response.error.detail if response.error != null else ""
 		var parsed: Variant = JSON.parse_string(detail) if detail.begins_with("{") else null
 		if parsed is Dictionary and (parsed as Dictionary).has("error"):
-			return DotResult.fail(DotError.CODE_IO, "The SQL gateway refused a statement.", str(parsed["error"]))
+			return GSResult.fail(GSError.CODE_IO, "The SQL gateway refused a statement.", str(parsed["error"]))
 		return response.wrap("The SQL gateway did not answer.")
 
 	if not (response.value is Dictionary):
-		return DotResult.fail(DotError.CODE_PARSE, "The SQL gateway did not return an object.")
+		return GSResult.fail(GSError.CODE_PARSE, "The SQL gateway did not return an object.")
 
 	var document: Dictionary = response.value
 	if document.has("error"):
-		return DotResult.fail(DotError.CODE_IO, "The SQL gateway refused a statement.", str(document["error"]))
+		return GSResult.fail(GSError.CODE_IO, "The SQL gateway refused a statement.", str(document["error"]))
 
-	return DotResult.success(document)
+	return GSResult.success(document)
 
 
 func describe() -> Dictionary:

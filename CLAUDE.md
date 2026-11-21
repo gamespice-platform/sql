@@ -17,14 +17,14 @@ Read the family [CLAUDE.md](../../CLAUDE.md) first.
 
 | Path | What |
 | --- | --- |
-| `addons/dot_sql/core/dot_sql.gd` | `DotSql`: `from_config` builds a driver (gateway or SQLite) |
-| `addons/dot_sql/core/dot_sql_dialect.gd` | `DotSqlDialect`: frozen `Kind`, column types, `RESERVED`, `is_safe_identifier`, `numbered`, `upsert` |
-| `addons/dot_sql/core/dot_sql_schema.gd` | `DotSqlSchema`: a table spec (plain data) to DDL per dialect |
-| `addons/dot_sql/core/dot_sql_migrator.gd` | `DotSqlMigrator`: per-component versions in `dot_sql_migrations` |
-| `addons/dot_sql/driver/dot_sql_driver.gd` | `DotSqlDriver`: the base and the duck-typed surface (`query`, `execute`, `batch`, `upsert_sql`, `migrate`, `ensure_table`) |
-| `addons/dot_sql/driver/dot_sql_driver_gateway.gd` | `DotSqlDriverGateway`: HTTP to a gateway, `/query` and `/batch` |
-| `addons/dot_sql/driver/dot_sql_driver_sqlite.gd` | `DotSqlDriverSqlite`: the godot-sqlite extension |
-| `addons/dot_sql/driver/dot_sql_driver_recording.gd` | `DotSqlDriverRecording`: records statements, for suites |
+| `addons/dot_sql/core/dot_sql.gd` | `GSSql`: `from_config` builds a driver (gateway or SQLite) |
+| `addons/dot_sql/core/dot_sql_dialect.gd` | `GSSqlDialect`: frozen `Kind`, column types, `RESERVED`, `is_safe_identifier`, `numbered`, `upsert` |
+| `addons/dot_sql/core/dot_sql_schema.gd` | `GSSqlSchema`: a table spec (plain data) to DDL per dialect |
+| `addons/dot_sql/core/dot_sql_migrator.gd` | `GSSqlMigrator`: per-component versions in `dot_sql_migrations` |
+| `addons/dot_sql/driver/dot_sql_driver.gd` | `GSSqlDriver`: the base and the duck-typed surface (`query`, `execute`, `batch`, `upsert_sql`, `migrate`, `ensure_table`) |
+| `addons/dot_sql/driver/dot_sql_driver_gateway.gd` | `GSSqlDriverGateway`: HTTP to a gateway, `/query` and `/batch` |
+| `addons/dot_sql/driver/dot_sql_driver_sqlite.gd` | `GSSqlDriverSqlite`: the godot-sqlite extension |
+| `addons/dot_sql/driver/dot_sql_driver_recording.gd` | `GSSqlDriverRecording`: records statements, for suites |
 | `tools/sql_gateway.py` | the reference gateway (SQLite, Postgres, MySQL) |
 | `tools/test_live.sh` | runs a live suite against SQLite, the extension, and any database given a DSN |
 | `tools/fetch_sqlite.sh` | installs pinned godot-sqlite into a project |
@@ -52,13 +52,13 @@ The runner takes a project and a scene, so every store's live suite runs the sam
 
 ## Rules that bite
 
-- Never name a `DotSql*` class from a store or a delivered game; hold the driver untyped, or load `dot_sql.gd` by path. [design](docs/design.md#stores-reach-a-driver-duck-typed)
+- Never name a `GSSql*` class from a store or a delivered game; hold the driver untyped, or load `dot_sql.gd` by path. [design](docs/design.md#stores-reach-a-driver-duck-typed)
 - `?` placeholders everywhere; wrap integers from rows in `int()`; always `await`. [design](docs/design.md#stores-reach-a-driver-duck-typed)
-- `DotSqlDialect.Kind` values are frozen; other repos compare against 0, 1, 2. [design](docs/design.md#stores-reach-a-driver-duck-typed)
-- A dialect difference is handled in `DotSqlDialect` or `DotSqlSchema` once, never in a store; never use a `RESERVED` word as a column. [design](docs/design.md#where-the-three-differ-handled-once)
+- `GSSqlDialect.Kind` values are frozen; other repos compare against 0, 1, 2. [design](docs/design.md#stores-reach-a-driver-duck-typed)
+- A dialect difference is handled in `GSSqlDialect` or `GSSqlSchema` once, never in a store; never use a `RESERVED` word as a column. [design](docs/design.md#where-the-three-differ-handled-once)
 - Bind computed values rather than `SET a = …, b = a + …`: MySQL reads the new `a`. [design](docs/design.md#where-the-three-differ-handled-once)
 - Append a migration step, never edit one; name components `<addon>:<prefix or table>`. [design](docs/design.md#migrations)
-- The gateway's `DotHttp` never retries; a refused statement is a 200 carrying `error`. [design](docs/design.md#the-gateway)
+- The gateway's `GSHttp` never retries; a refused statement is a 200 carrying `error`. [design](docs/design.md#the-gateway)
 - The gateway's token comes from a file, never argv; its fence is the database user. [design](docs/design.md#the-gateway)
 - Headless Godot gets no notification on SIGINT or SIGTERM: a store writes as it goes, never at exit. [design](docs/design.md#sqlite-through-the-extension)
 - Run the live suites against all three databases after a dialect or schema change; SQLite alone accepts what MySQL refuses. [history](docs/history.md#a-column-named-key)
