@@ -31,7 +31,7 @@ func _ready() -> void:
 
 	# The extension itself, no gateway: the only run that reaches GSSqlDriverSqlite's
 	# calls into godot-sqlite rather than the SQL they would send.
-	var sqlite_path := (OS.get_environment("GS_SQL_SQLITE_PATH") if OS.has_environment("GS_SQL_SQLITE_PATH") else OS.get_environment("GS_SQL_SQLITE_PATH"))
+	var sqlite_path := OS.get_environment("GS_SQL_SQLITE_PATH")
 	if sqlite_path != "":
 		var direct := GSSql.from_config({"driver": "sqlite", "path": sqlite_path}, self)
 		driver = direct.value
@@ -39,9 +39,9 @@ func _ready() -> void:
 		await _run()
 		return
 
-	var url := (OS.get_environment("GS_SQL_URL") if OS.has_environment("GS_SQL_URL") else OS.get_environment("GS_SQL_URL"))
-	var dialect := GSSqlDialect.from_name((OS.get_environment("GS_SQL_DIALECT") if OS.has_environment("GS_SQL_DIALECT") else OS.get_environment("GS_SQL_DIALECT")))
-	var token_file := (OS.get_environment("GS_SQL_TOKEN_FILE") if OS.has_environment("GS_SQL_TOKEN_FILE") else OS.get_environment("GS_SQL_TOKEN_FILE"))
+	var url := OS.get_environment("GS_SQL_URL")
+	var dialect := GSSqlDialect.from_name(OS.get_environment("GS_SQL_DIALECT"))
+	var token_file := OS.get_environment("GS_SQL_TOKEN_FILE")
 	if url == "" or dialect < 0 or token_file == "":
 		print("set GS_SQL_SQLITE_PATH, or GS_SQL_URL, GS_SQL_DIALECT and GS_SQL_TOKEN_FILE; see tools/test_live.sh")
 		get_tree().quit(2)
