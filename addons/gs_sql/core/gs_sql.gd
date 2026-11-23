@@ -38,7 +38,7 @@ static func from_config(config: Dictionary, host: Node = null) -> GSResult:
 			return GSResult.success(null)
 
 		"sqlite", "sqlite3":
-			var path := str(config.get("path", "user://dot.db"))
+			var path := str(config.get("path", GSSqlDriverSqlite.default_path()))
 			if path.strip_edges() == "":
 				return GSResult.fail(GSError.CODE_INVALID, "The SQLite driver needs a path.")
 			return GSResult.success(GSSqlDriverSqlite.new(path))

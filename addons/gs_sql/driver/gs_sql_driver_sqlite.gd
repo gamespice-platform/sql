@@ -27,7 +27,7 @@ extends GSSqlDriver
 
 const EXTENSION_CLASS := "SQLite"
 
-var path: String = "user://dot.db"
+var path: String = default_path()
 
 ## The extension's own statement logging. For a bad afternoon.
 var verbose: bool = false
@@ -35,8 +35,17 @@ var verbose: bool = false
 var _db: Object = null
 
 
-func _init(p_path: String = "user://dot.db") -> void:
-	path = p_path
+func _init(p_path: String = "") -> void:
+	path = p_path if p_path != "" else default_path()
+
+
+## The default database file. TEMPORARY read-only alias: a server that used the default before the
+## Dot-to-GS rename has its data in user://dot.db, so that file is still opened while user://gs.db
+## does not exist. Remove once every deployed server has been moved to user://gs.db.
+static func default_path() -> String:
+	if not FileAccess.file_exists("user://gs.db") and FileAccess.file_exists("user://dot.db"):
+		return "user://dot.db"
+	return "user://gs.db"
 
 
 func dialect() -> int:
