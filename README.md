@@ -2,6 +2,8 @@
 
 Lets GameSpice addons keep their data in SQLite, PostgreSQL or MySQL/MariaDB, so records, statistics, achievements and bans can live in a real database that several servers share. Godot has no database client of its own; this is the layer that supplies one.
 
+A GameSpice addon, MIT, built with Claude Code. The headless suites are `examples/sql_selftest.tscn` (no database) and `examples/sql_live.tscn` (real databases). It sits under the games in [Zee's Games](https://zeesgames.com), which are built on GameSpice addons and run on live servers. Bug reports go to the [issue tracker](https://github.com/gamespice-platform/sql/issues).
+
 ## Install
 
 1. Get [Godot 4.7](https://godotengine.org/download).
@@ -64,8 +66,26 @@ GameSpice Timer, GameSpice Moderation, GameSpice Leaderboard, GameSpice Achievem
 
 Import the project once, then run each scene headless with Godot. `tools/test_live.sh` runs the live suite on SQLite; set `GS_SQL_PG_DSN` and `GS_SQL_MYSQL_DSN` to include PostgreSQL and MySQL. It also runs other addons' live suites, such as `tools/test_live.sh ../gs-timer res://examples/timer_sql_live.tscn`.
 
-## Status and licence
+## Used by
 
-Part of the [**GameSpice**](https://gamespice.net) platform: a family of Godot addons. Written with Claude Code and maintained by `gamemann`. Every addon has headless tests, but little of this has been played by real users yet, so expect rough edges and please [open an issue](https://github.com/gamespice-platform/sql/issues) when you hit one.
+These games from Zee's Games vendor this addon:
+
+- [Fatal Contact](https://zeesgames.com/fatal-contact)
+- [Airdrift](https://zeesgames.com/airdrift)
+- [Playlot](https://zeesgames.com/playlot)
+- [Hungario](https://zeesgames.com/hungario)
+- [Buses From Hell](https://zeesgames.com/buses-from-hell)
+- [Smash Copter](https://zeesgames.com/smash-copter)
+- [Zombie Zone](https://zeesgames.com/zombie-zone)
+- [Hide n Seek](https://zeesgames.com/hide-n-seek)
+- [Prop Hunt](https://zeesgames.com/prop-hunt)
+- [Murder Mystery](https://zeesgames.com/murder-mystery)
+- [Deathrun](https://zeesgames.com/deathrun)
+- [Dangerous Delivery](https://zeesgames.com/dangerous-delivery)
+- [Look At Me](https://zeesgames.com/look-at-me)
+
+The whole collection is at [zeesgames.com](https://zeesgames.com).
+
+## Licence
 
 MIT licence, see [LICENSE](LICENSE). The only closed part of the [**GameSpice**](https://gamespice.net) platform is the web back end; you can use your own instead of GameSpice's.
